@@ -2,10 +2,13 @@ FROM node:18-alpine
 
 WORKDIR /usr/src/app
 
-COPY package*.json ./
+# Pehle package.json copy karo
+COPY package.json ./
 
-RUN npm install --legacy-peer-deps
+# Phir install karo
+RUN npm install
 
+# Baaki files copy karo
 COPY . .
 
 EXPOSE 3000
