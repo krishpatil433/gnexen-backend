@@ -1,0 +1,1589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GNEXEN REWARD</title>
+    
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0a0a1a;
+            color: #ffffff;
+            min-height: 100vh;
+        }
+        
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        .hidden { display: none !important; }
+        .text-center { text-align: center; }
+        .text-muted { color: #8888aa; }
+        .mt-2 { margin-top: 20px; }
+        .mb-2 { margin-bottom: 20px; }
+
+        .btn {
+            display: inline-block;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 50px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #6C63FF, #5A52D5);
+            color: white;
+        }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(108,99,255,0.4); }
+        .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+        .btn-secondary {
+            background: transparent;
+            color: white;
+            border: 2px solid #6C63FF;
+        }
+        .btn-secondary:hover { background: #6C63FF; transform: translateY(-2px); }
+        .btn-success { background: #4CAF50; color: white; }
+        .btn-success:hover { transform: translateY(-2px); }
+        .btn-danger { background: #F44336; color: white; }
+        .btn-sm { padding: 8px 20px; font-size: 14px; }
+
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+        }
+        .toast {
+            padding: 15px 25px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            color: white;
+            font-weight: 500;
+            animation: slideIn 0.3s ease;
+            min-width: 250px;
+        }
+        .toast-success { background: #4CAF50; }
+        .toast-error { background: #F44336; }
+        .toast-warning { background: #FFC107; color: #0a0a1a; }
+        .toast-info { background: #6C63FF; }
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(5px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .modal {
+            background: #12122a;
+            padding: 30px;
+            border-radius: 16px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+        .modal h2 { margin-bottom: 20px; }
+        .modal-close {
+            float: right;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #8888aa;
+            font-size: 14px;
+        }
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 10px;
+            background: rgba(255,255,255,0.05);
+            color: white;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #6C63FF;
+            box-shadow: 0 0 0 3px rgba(108,99,255,0.2);
+        }
+        .form-group input::placeholder { color: #555577; }
+        .form-group select option { background: #12122a; color: white; }
+
+        .withdraw-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .withdraw-option {
+            background: rgba(255,255,255,0.05);
+            border: 2px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .withdraw-option:hover {
+            border-color: #6C63FF;
+            transform: translateY(-4px);
+        }
+        .withdraw-option.selected {
+            border-color: #6C63FF;
+            background: rgba(108,99,255,0.1);
+        }
+        .withdraw-option .icon { font-size: 48px; }
+        .withdraw-option .name { font-weight: 600; margin-top: 10px; font-size: 18px; }
+        .withdraw-option .desc { color: #8888aa; font-size: 14px; margin-top: 5px; }
+        .withdraw-option .badge {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-top: 8px;
+        }
+        .badge-instant { background: #4CAF50; color: white; }
+        .badge-manual { background: #9C27B0; color: white; }
+
+        .gift-card-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+            margin: 15px 0;
+        }
+        .gift-card-options .gift-option {
+            background: rgba(255,255,255,0.05);
+            border: 2px solid rgba(255,255,255,0.08);
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .gift-card-options .gift-option:hover {
+            border-color: #9C27B0;
+            background: rgba(156,39,176,0.1);
+        }
+        .gift-card-options .gift-option.selected {
+            border-color: #9C27B0;
+            background: rgba(156,39,176,0.2);
+        }
+        .gift-card-options .gift-option .usd {
+            font-size: 14px;
+            font-weight: 600;
+            color: #4CAF50;
+        }
+        .gift-card-options .gift-option .inr {
+            font-size: 20px;
+            font-weight: 700;
+            color: #9C27B0;
+            margin-top: 4px;
+        }
+        .gift-card-options .gift-option .label {
+            font-size: 11px;
+            color: #8888aa;
+            margin-top: 4px;
+        }
+
+        /* Dashboard */
+        #app { display: none; min-height: 100vh; }
+        .sidebar {
+            position: fixed;
+            left: 0; top: 0; bottom: 0;
+            width: 260px;
+            background: #12122a;
+            border-right: 1px solid rgba(255,255,255,0.08);
+            padding: 20px;
+            overflow-y: auto;
+            z-index: 100;
+            transition: all 0.3s ease;
+        }
+        .sidebar .logo { font-size: 24px; margin-bottom: 30px; display: block; background: linear-gradient(135deg, #6C63FF, #8B83FF); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .sidebar .logo span { -webkit-text-fill-color: white; }
+        .sidebar nav a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            border-radius: 10px;
+            color: #8888aa;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            margin-bottom: 4px;
+        }
+        .sidebar nav a:hover,
+        .sidebar nav a.active {
+            background: rgba(108,99,255,0.15);
+            color: white;
+        }
+
+        .main-content {
+            margin-left: 260px;
+            padding: 20px 30px;
+            min-height: 100vh;
+        }
+
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .topbar .page-title { font-size: 24px; font-weight: 700; }
+        .topbar .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .topbar .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #6C63FF;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 18px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .stat-card {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
+            padding: 20px;
+        }
+        .stat-card .label { color: #8888aa; font-size: 14px; }
+        .stat-card .value { font-size: 28px; font-weight: 700; }
+        .stat-card .value.green { color: #4CAF50; }
+        .stat-card .value.orange { color: #FFC107; }
+        .stat-card .value.blue { color: #8B83FF; }
+        .stat-card .value.pink { color: #FF6B6B; }
+        .stat-card .value.purple { color: #9C27B0; }
+
+        .page-section {
+            display: none;
+            animation: fadeIn 0.4s ease;
+        }
+        .page-section.active { display: block; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .table-responsive { overflow-x: auto; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: rgba(255,255,255,0.03);
+            border-radius: 16px;
+            overflow: hidden;
+        }
+        table th {
+            background: rgba(255,255,255,0.05);
+            padding: 12px 16px;
+            text-align: left;
+            font-weight: 600;
+            color: #8888aa;
+            font-size: 14px;
+        }
+        table td {
+            padding: 12px 16px;
+            border-top: 1px solid rgba(255,255,255,0.08);
+            font-size: 14px;
+        }
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .status-badge.pending { background: #FFC107; color: #0a0a1a; }
+        .status-badge.paid { background: #4CAF50; color: white; }
+        .status-badge.failed { background: #F44336; color: white; }
+        .status-badge.processing { background: #2196F3; color: white; }
+        .status-badge.rejected { background: #F44336; color: white; }
+
+        .task-card {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            transition: all 0.3s ease;
+        }
+        .task-card:hover { border-color: #6C63FF; }
+        .task-card .info h4 { font-size: 18px; margin-bottom: 5px; }
+        .task-card .info p { color: #8888aa; font-size: 14px; }
+        .task-card .reward { font-size: 20px; font-weight: 700; color: #4CAF50; }
+        .task-card .actions { display: flex; gap: 10px; }
+
+        .hamburger { display: none; background: none; border: none; color: white; font-size: 28px; cursor: pointer; }
+
+        .mobile-nav {
+            display: none;
+            position: fixed;
+            bottom: 0; left: 0; right: 0;
+            background: #12122a;
+            border-top: 1px solid rgba(255,255,255,0.08);
+            padding: 10px;
+            z-index: 100;
+            justify-content: space-around;
+        }
+        .mobile-nav a {
+            color: #8888aa;
+            text-decoration: none;
+            font-size: 12px;
+            text-align: center;
+            padding: 6px 12px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        .mobile-nav a.active {
+            color: #8B83FF;
+            background: rgba(108,99,255,0.15);
+        }
+        .mobile-nav a .icon { font-size: 20px; display: block; }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.9);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 99999;
+        }
+        .loading-overlay .spinner {
+            border: 4px solid rgba(255,255,255,0.08);
+            border-top: 4px solid #6C63FF;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .loading-overlay p { margin-top: 20px; color: #8888aa; }
+
+        @media (max-width: 992px) {
+            .sidebar {
+                transform: translateX(-100%);
+                width: 280px;
+            }
+            .sidebar.open { transform: translateX(0); }
+            .main-content { margin-left: 0; padding: 15px; }
+            .hamburger { display: block !important; }
+        }
+
+        @media (max-width: 600px) {
+            .mobile-nav { display: flex; }
+            .main-content { padding-bottom: 80px; }
+            .withdraw-options { grid-template-columns: 1fr; }
+            .stats-grid { grid-template-columns: 1fr 1fr; }
+            .gift-card-options { grid-template-columns: 1fr 1fr; }
+        }
+
+        .auth-error {
+            background: rgba(244,67,54,0.15);
+            border: 1px solid #F44336;
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 15px;
+            color: #F44336;
+            font-size: 14px;
+            display: none;
+        }
+        .auth-error.show { display: block; }
+        .auth-success {
+            background: rgba(76,175,80,0.15);
+            border: 1px solid #4CAF50;
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 15px;
+            color: #4CAF50;
+            font-size: 14px;
+            display: none;
+        }
+        .auth-success.show { display: block; }
+
+        /* Landing Page */
+        #landingPage {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #0a0a1a, #12122a);
+            display: flex;
+            flex-direction: column;
+        }
+        .landing-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 40px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .logo {
+            font-size: 28px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #6C63FF, #8B83FF);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .logo span { -webkit-text-fill-color: white; }
+        .nav-links {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .nav-links a {
+            color: #8888aa;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        .nav-links a:hover { color: white; }
+
+        .hero {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 80px 20px 60px;
+            flex: 1;
+        }
+        .hero h1 {
+            font-size: 64px;
+            font-weight: 800;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #fff, #8B83FF);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .hero .tagline {
+            font-size: 24px;
+            color: #8888aa;
+            margin-bottom: 30px;
+        }
+        .hero .sub {
+            font-size: 18px;
+            color: #8888aa;
+            max-width: 600px;
+            margin-bottom: 30px;
+        }
+        .hero-buttons {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+    </style>
+</head>
+<body>
+
+<!-- LOADING OVERLAY -->
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="spinner"></div>
+    <p>Loading...</p>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- LANDING PAGE -->
+<div id="landingPage">
+    <nav class="landing-nav">
+        <div class="logo">GNEXEN<span>REWARD</span></div>
+        <div class="nav-links">
+            <a href="#">Home</a>
+            <a href="#">Features</a>
+            <a href="#">FAQ</a>
+            <a href="#" onclick="showAuthModal('login')" class="btn btn-secondary btn-sm">Login</a>
+            <a href="#" onclick="showAuthModal('register')" class="btn btn-primary btn-sm">Register</a>
+        </div>
+    </nav>
+
+    <div class="hero">
+        <h1>GNEXEN REWARD</h1>
+        <p class="tagline">Complete Tasks. Earn Crypto. Get Rewarded.</p>
+        <p class="sub">Earn USDT, Amazon Gift Cards & more by completing shortlinks, PTC ads and tasks.</p>
+        <div class="hero-buttons">
+            <a href="#" onclick="showAuthModal('register')" class="btn btn-primary">Start Earning</a>
+            <a href="#" onclick="showAuthModal('login')" class="btn btn-secondary">Login</a>
+        </div>
+    </div>
+</div>
+
+<!-- AUTH MODAL -->
+<div class="modal-overlay hidden" id="authModal">
+    <div class="modal">
+        <button class="modal-close" onclick="closeAuthModal()">✕</button>
+        <h2 id="authModalTitle">Login</h2>
+        
+        <div id="authError" class="auth-error"></div>
+        <div id="authSuccess" class="auth-success"></div>
+        
+        <form id="authForm" onsubmit="handleAuth(event)">
+            <div class="form-group hidden" id="nameGroup">
+                <label>Full Name</label>
+                <input type="text" id="authName" placeholder="John Doe">
+            </div>
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" id="authEmail" placeholder="you@example.com">
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="authPassword" placeholder="••••••••">
+            </div>
+            <div class="form-group hidden" id="confirmGroup">
+                <label>Confirm Password</label>
+                <input type="password" id="authConfirm" placeholder="••••••••">
+            </div>
+            <div class="form-group hidden" id="refGroup">
+                <label>Referral Code (optional)</label>
+                <input type="text" id="authReferral" placeholder="GNX12345">
+            </div>
+            <button type="button" class="btn btn-primary" style="width:100%;" id="authSubmitBtn" onclick="handleAuth()">Login</button>
+            <p style="margin-top:15px;text-align:center;color:#8888aa;">
+                <span id="authToggleText">Don't have an account?</span>
+                <a href="#" onclick="toggleAuthMode()" id="authToggleLink" style="color:#6C63FF;">Register</a>
+            </p>
+            <p style="margin-top:10px;text-align:center;">
+                <a href="#" onclick="resetPassword()" style="color:#6C63FF;">Forgot password?</a>
+            </p>
+        </form>
+    </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+    <aside class="sidebar" id="sidebar">
+        <a href="#" class="logo">GNEXEN<span>REWARD</span></a>
+        <nav>
+            <a href="#" class="active" data-page="dashboard"><span>📊</span> Dashboard</a>
+            <a href="#" data-page="shortlinks"><span>🔗</span> Shortlinks</a>
+            <a href="#" data-page="ptc"><span>📢</span> PTC Ads</a>
+            <a href="#" data-page="tasks"><span>📋</span> Tasks</a>
+            <a href="#" data-page="withdraw"><span>🏦</span> Withdraw</a>
+            <a href="#" data-page="history"><span>📜</span> History</a>
+            <a href="#" data-page="profile"><span>👤</span> Profile</a>
+            <a href="#" onclick="logoutUser()"><span>🚪</span> Logout</a>
+        </nav>
+    </aside>
+
+    <main class="main-content">
+        <div class="topbar">
+            <div style="display:flex;align-items:center;gap:15px;">
+                <button class="hamburger" onclick="toggleSidebar()">☰</button>
+                <h1 class="page-title" id="pageTitle">Dashboard</h1>
+            </div>
+            <div class="user-info">
+                <span class="user-name" id="userNameDisplay">User</span>
+                <div class="user-avatar" id="userAvatar">U</div>
+            </div>
+        </div>
+
+        <!-- DASHBOARD -->
+        <div class="page-section active" id="page-dashboard">
+            <div class="stats-grid">
+                <div class="stat-card"><div class="label">💰 Balance</div><div class="value blue" id="dashBalance">$0.0000</div></div>
+                <div class="stat-card"><div class="label">📈 Total Earned</div><div class="value green" id="dashEarned">$0.0000</div></div>
+                <div class="stat-card"><div class="label">🏦 Withdrawn</div><div class="value orange" id="dashWithdrawn">$0.0000</div></div>
+                <div class="stat-card"><div class="label">✅ Tasks Done</div><div class="value pink" id="dashTasks">0</div></div>
+            </div>
+            <div style="background:rgba(76,175,80,0.1);border:1px solid #4CAF50;border-radius:12px;padding:15px;margin-top:10px;">
+                <p style="color:#4CAF50;text-align:center;font-size:14px;">
+                    ⚡ <strong>FaucetPay withdrawals are AUTOMATIC!</strong> Instant payment to your wallet.
+                </p>
+            </div>
+            <div style="background:rgba(156,39,176,0.1);border:1px solid #9C27B0;border-radius:12px;padding:15px;margin-top:10px;">
+                <p style="color:#9C27B0;text-align:center;font-size:14px;">
+                    🎁 <strong>Amazon Gift Cards:</strong> $0.10 = ₹10 | $0.20 = ₹20 | $0.50 = ₹50 | $1.00 = ₹100 | $2.00 = ₹200
+                </p>
+            </div>
+            <h3 style="margin:30px 0 15px;">📋 Recent Withdrawals</h3>
+            <div class="table-responsive">
+                <table>
+                    <thead><tr><th>Date</th><th>Method</th><th>Amount</th><th>Status</th></tr></thead>
+                    <tbody id="recentWithdrawals">
+                        <tr><td colspan="4" class="text-muted text-center">No withdrawals yet</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- SHORTLINKS -->
+        <div class="page-section" id="page-shortlinks">
+            <h2>🔗 Shortlinks</h2>
+            <p class="text-muted mb-2">Complete shortlinks and earn rewards.</p>
+            <div id="shortlinksList"></div>
+        </div>
+
+        <!-- PTC ADS -->
+        <div class="page-section" id="page-ptc">
+            <h2>📢 PTC Ads</h2>
+            <p class="text-muted mb-2">View advertisements and earn rewards.</p>
+            <div id="ptcList"></div>
+        </div>
+
+        <!-- TASKS -->
+        <div class="page-section" id="page-tasks">
+            <h2>📋 Tasks</h2>
+            <p class="text-muted mb-2">Complete tasks and earn rewards.</p>
+            <div id="tasksList"></div>
+        </div>
+
+        <!-- WITHDRAW -->
+        <div class="page-section" id="page-withdraw">
+            <h2>🏦 Withdraw Funds</h2>
+            <p class="text-muted mb-2">Choose your withdrawal method below</p>
+            
+            <div class="withdraw-options">
+                <div class="withdraw-option" onclick="selectMethod('faucetpay')" id="method-faucetpay">
+                    <div class="icon">💰</div>
+                    <div class="name">FaucetPay USDT</div>
+                    <div class="desc">Instant withdrawal to your FaucetPay wallet</div>
+                    <span class="badge badge-instant">⚡ Instant</span>
+                </div>
+                <div class="withdraw-option" onclick="selectMethod('giftcard')" id="method-giftcard">
+                    <div class="icon">🎁</div>
+                    <div class="name">Amazon Gift Card</div>
+                    <div class="desc">Redeem your earnings for Amazon vouchers</div>
+                    <span class="badge badge-manual">🕐 Manual</span>
+                </div>
+            </div>
+
+            <div id="withdrawFormContainer" class="hidden">
+                <div style="max-width:500px;margin:20px auto;background:rgba(255,255,255,0.05);padding:30px;border-radius:16px;border:1px solid rgba(255,255,255,0.08);">
+                    <h3 id="withdrawFormTitle">FaucetPay USDT Withdrawal</h3>
+                    <p class="text-muted" style="font-size:13px;margin:5px 0 15px;" id="withdrawFormDesc">⚡ Instant payment to your FaucetPay wallet</p>
+                    
+                    <div id="withdrawFields"></div>
+                    
+                    <div style="background:rgba(108,99,255,0.05);border:1px solid rgba(108,99,255,0.2);border-radius:10px;padding:15px;margin:15px 0;">
+                        <div style="display:flex;justify-content:space-between;padding:5px 0;">
+                            <span style="color:#8888aa;">Amount</span>
+                            <span id="displayAmount">$0.0000</span>
+                        </div>
+                        <div style="display:flex;justify-content:space-between;padding:5px 0;border-top:1px solid rgba(255,255,255,0.05);">
+                            <span style="color:#8888aa;">Fee (0.5%)</span>
+                            <span id="displayFee">$0.0000</span>
+                        </div>
+                        <div style="display:flex;justify-content:space-between;padding:5px 0;border-top:1px solid rgba(255,255,255,0.05);font-weight:700;font-size:18px;">
+                            <span>You Receive</span>
+                            <span id="displayNet" style="color:#4CAF50;">$0.0000</span>
+                        </div>
+                    </div>
+                    
+                    <button type="button" class="btn btn-success" style="width:100%;" id="withdrawSubmitBtn" onclick="submitWithdraw()">
+                        💸 Withdraw Now
+                    </button>
+                    <p class="text-muted text-center mt-2" style="font-size:12px;" id="withdrawMinText">Minimum withdrawal: $0.0100</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- HISTORY -->
+        <div class="page-section" id="page-history">
+            <h2>📜 Withdrawal History</h2>
+            <div class="table-responsive">
+                <table>
+                    <thead><tr><th>Date</th><th>Method</th><th>Amount</th><th>Status</th><th>Transaction ID</th></tr></thead>
+                    <tbody id="historyList">
+                        <tr><td colspan="5" class="text-muted text-center">No history</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- PROFILE -->
+        <div class="page-section" id="page-profile">
+            <h2>👤 Profile</h2>
+            <div style="max-width:500px;margin:0 auto;background:rgba(255,255,255,0.05);padding:30px;border-radius:16px;border:1px solid rgba(255,255,255,0.08);">
+                <form id="profileForm" onsubmit="updateProfile(event)">
+                    <div class="form-group">
+                        <label>Name</label>
+                        <input type="text" id="profileName" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="profileEmail" disabled style="opacity:0.6;">
+                    </div>
+                    <div class="form-group">
+                        <label>Referral Code</label>
+                        <input type="text" id="profileRefCode" disabled style="opacity:0.6;">
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width:100%;">Update Profile</button>
+                </form>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- MOBILE NAV -->
+<div class="mobile-nav" id="mobileNav">
+    <a href="#" data-page="dashboard" class="active"><span class="icon">📊</span>Home</a>
+    <a href="#" data-page="shortlinks"><span class="icon">🔗</span>Links</a>
+    <a href="#" data-page="tasks"><span class="icon">📋</span>Tasks</a>
+    <a href="#" data-page="withdraw"><span class="icon">🏦</span>Withdraw</a>
+    <a href="#" onclick="logoutUser()"><span class="icon">🚪</span>Logout</a>
+</div>
+
+<script>
+    // ============================================================
+    // 🔑 SUPABASE CREDENTIALS (UPDATED)
+    // ============================================================
+    const SUPABASE_URL = 'https://ogkavpsfbihxbodvzppj.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_W4JV0K8shyAgOE0BUG6WPw_teElLVsE';
+    
+    // 🌐 ZEABUR BACKEND URL (Replace with your Zeabur URL)
+    const API_URL = 'http://localhost:3000'; // Change to your Zeabur URL
+    
+    // ============================================================
+    // STATE VARIABLES
+    // ============================================================
+    let currentUser = null;
+    let userData = null;
+    let selectedMethod = null;
+    let isSubmitting = false;
+    let authMode = 'login';
+
+    // ============================================================
+    // TOAST
+    // ============================================================
+    function showToast(message, type = 'info') {
+        const container = document.getElementById('toastContainer');
+        const toast = document.createElement('div');
+        toast.className = `toast toast-${type}`;
+        toast.textContent = message;
+        container.appendChild(toast);
+        setTimeout(() => { toast.remove(); }, 4000);
+    }
+
+    // ============================================================
+    // HIDE LOADING
+    // ============================================================
+    function hideLoading() {
+        document.getElementById('loadingOverlay').style.display = 'none';
+    }
+
+    // ============================================================
+    // AUTH - LANDING PAGE
+    // ============================================================
+    function showAuthModal(mode) {
+        authMode = mode || 'login';
+        const modal = document.getElementById('authModal');
+        const title = document.getElementById('authModalTitle');
+        const submitBtn = document.getElementById('authSubmitBtn');
+        const nameGroup = document.getElementById('nameGroup');
+        const confirmGroup = document.getElementById('confirmGroup');
+        const refGroup = document.getElementById('refGroup');
+        const toggleText = document.getElementById('authToggleText');
+        const toggleLink = document.getElementById('authToggleLink');
+        const errorDiv = document.getElementById('authError');
+        const successDiv = document.getElementById('authSuccess');
+        
+        errorDiv.classList.remove('show');
+        successDiv.classList.remove('show');
+        
+        document.getElementById('authEmail').value = '';
+        document.getElementById('authPassword').value = '';
+        document.getElementById('authConfirm').value = '';
+        document.getElementById('authName').value = '';
+        document.getElementById('authReferral').value = '';
+
+        if (mode === 'register') {
+            title.textContent = 'Create Account';
+            submitBtn.textContent = 'Register';
+            nameGroup.classList.remove('hidden');
+            confirmGroup.classList.remove('hidden');
+            refGroup.classList.remove('hidden');
+            toggleText.textContent = 'Already have an account?';
+            toggleLink.textContent = 'Login';
+        } else {
+            title.textContent = 'Login';
+            submitBtn.textContent = 'Login';
+            nameGroup.classList.add('hidden');
+            confirmGroup.classList.add('hidden');
+            refGroup.classList.add('hidden');
+            toggleText.textContent = "Don't have an account?";
+            toggleLink.textContent = 'Register';
+        }
+        modal.classList.remove('hidden');
+    }
+
+    function closeAuthModal() {
+        document.getElementById('authModal').classList.add('hidden');
+    }
+
+    function toggleAuthMode() {
+        const isLogin = authMode === 'login';
+        showAuthModal(isLogin ? 'register' : 'login');
+    }
+
+    // ============================================================
+    // API FUNCTIONS (Supabase + Zeabur)
+    // ============================================================
+    async function registerUser(name, email, password, referral) {
+        const response = await fetch(`${API_URL}/api/register`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, email, password, referral })
+        });
+        return response.json();
+    }
+
+    async function loginUser(email, password) {
+        const response = await fetch(`${API_URL}/api/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+        });
+        return response.json();
+    }
+
+    async function getUserData(uid) {
+        const response = await fetch(`${API_URL}/api/user/${uid}`);
+        return response.json();
+    }
+
+    async function updateUser(uid, name) {
+        const response = await fetch(`${API_URL}/api/user/${uid}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name })
+        });
+        return response.json();
+    }
+
+    async function createWithdrawal(userId, method, account, amount, giftValue) {
+        const response = await fetch(`${API_URL}/api/withdraw`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId, method, account, amount, giftValue })
+        });
+        return response.json();
+    }
+
+    async function getWithdrawals(userId) {
+        const response = await fetch(`${API_URL}/api/withdrawals/${userId}`);
+        return response.json();
+    }
+
+    async function getShortlinks() {
+        const response = await fetch(`${API_URL}/api/shortlinks`);
+        return response.json();
+    }
+
+    async function getPTCAds() {
+        const response = await fetch(`${API_URL}/api/ptc-ads`);
+        return response.json();
+    }
+
+    async function getTasks() {
+        const response = await fetch(`${API_URL}/api/tasks`);
+        return response.json();
+    }
+
+    async function completeTaskRequest(userId, taskId, reward) {
+        const response = await fetch(`${API_URL}/api/complete-task`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId, taskId, reward })
+        });
+        return response.json();
+    }
+
+    // ============================================================
+    // AUTH HANDLER
+    // ============================================================
+    async function handleAuth() {
+        const email = document.getElementById('authEmail').value.trim();
+        const password = document.getElementById('authPassword').value;
+        const name = document.getElementById('authName').value.trim();
+        const confirm = document.getElementById('authConfirm').value;
+        const referral = document.getElementById('authReferral').value.trim();
+        const submitBtn = document.getElementById('authSubmitBtn');
+        const errorDiv = document.getElementById('authError');
+        const successDiv = document.getElementById('authSuccess');
+
+        errorDiv.classList.remove('show');
+        successDiv.classList.remove('show');
+
+        if (!email || !password) {
+            errorDiv.textContent = '❌ Please enter email and password';
+            errorDiv.classList.add('show');
+            return;
+        }
+
+        if (authMode === 'register') {
+            if (!name) {
+                errorDiv.textContent = '❌ Please enter your name';
+                errorDiv.classList.add('show');
+                return;
+            }
+            if (password !== confirm) {
+                errorDiv.textContent = '❌ Passwords do not match';
+                errorDiv.classList.add('show');
+                return;
+            }
+            if (password.length < 6) {
+                errorDiv.textContent = '❌ Password must be at least 6 characters';
+                errorDiv.classList.add('show');
+                return;
+            }
+        }
+
+        submitBtn.textContent = authMode === 'register' ? 'Creating...' : 'Logging in...';
+        submitBtn.disabled = true;
+
+        try {
+            let response;
+            if (authMode === 'register') {
+                response = await registerUser(name, email, password, referral);
+            } else {
+                response = await loginUser(email, password);
+            }
+
+            if (!response.success) {
+                errorDiv.textContent = '❌ ' + response.error;
+                errorDiv.classList.add('show');
+                showToast('❌ ' + response.error, 'error');
+                submitBtn.textContent = authMode === 'register' ? 'Register' : 'Login';
+                submitBtn.disabled = false;
+                return;
+            }
+
+            currentUser = response.user;
+            userData = response.user;
+            
+            if (response.session) {
+                localStorage.setItem('gnx_session', JSON.stringify(response.session));
+            }
+            localStorage.setItem('gnx_user', JSON.stringify(response.user));
+
+            successDiv.textContent = authMode === 'register' ? '✅ Account created!' : '✅ Welcome back!';
+            successDiv.classList.add('show');
+            showToast(authMode === 'register' ? '✅ Account created!' : '✅ Welcome back!', 'success');
+
+            setTimeout(() => {
+                closeAuthModal();
+                showDashboard();
+            }, 1000);
+
+        } catch (err) {
+            console.error('Auth error:', err);
+            errorDiv.textContent = '❌ ' + err.message;
+            errorDiv.classList.add('show');
+            showToast('❌ ' + err.message, 'error');
+        }
+
+        submitBtn.textContent = authMode === 'register' ? 'Register' : 'Login';
+        submitBtn.disabled = false;
+    }
+
+    async function resetPassword() {
+        const email = document.getElementById('authEmail').value.trim();
+        if (!email) {
+            showToast('Please enter your email address', 'warning');
+            return;
+        }
+        try {
+            const response = await fetch(`${SUPABASE_URL}/auth/v1/recover`, {
+                method: 'POST',
+                headers: {
+                    'apikey': SUPABASE_ANON_KEY,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ email })
+            });
+            if (response.ok) {
+                showToast('✅ Password reset email sent!', 'success');
+            } else {
+                const data = await response.json();
+                showToast('❌ ' + data.message, 'error');
+            }
+        } catch (err) {
+            showToast('❌ ' + err.message, 'error');
+        }
+    }
+
+    // ============================================================
+    // NAVIGATION
+    // ============================================================
+    function toggleSidebar() {
+        document.getElementById('sidebar').classList.toggle('open');
+    }
+
+    document.querySelectorAll('.sidebar nav a, .mobile-nav a').forEach(link => {
+        link.addEventListener('click', function(e) {
+            const page = this.dataset.page;
+            if (!page) return;
+            e.preventDefault();
+
+            document.querySelectorAll('.page-section').forEach(el => el.classList.remove('active'));
+            const target = document.getElementById('page-' + page);
+            if (target) target.classList.add('active');
+
+            document.querySelectorAll('.sidebar nav a, .mobile-nav a').forEach(el => el.classList.remove('active'));
+            this.classList.add('active');
+
+            const titles = {
+                dashboard: 'Dashboard',
+                shortlinks: 'Shortlinks',
+                ptc: 'PTC Ads',
+                tasks: 'Tasks',
+                withdraw: 'Withdraw',
+                history: 'History',
+                profile: 'Profile'
+            };
+            document.getElementById('pageTitle').textContent = titles[page] || page;
+            document.getElementById('sidebar').classList.remove('open');
+        });
+    });
+
+    // ============================================================
+    // LOGOUT
+    // ============================================================
+    async function logoutUser() {
+        try {
+            localStorage.removeItem('gnx_session');
+            localStorage.removeItem('gnx_user');
+            currentUser = null;
+            userData = null;
+            document.getElementById('app').style.display = 'none';
+            document.getElementById('landingPage').style.display = 'block';
+            document.getElementById('mobileNav').style.display = 'none';
+            showToast('Logged out', 'info');
+        } catch (err) {
+            showToast(err.message, 'error');
+        }
+    }
+
+    // ============================================================
+    // DASHBOARD
+    // ============================================================
+    async function showDashboard() {
+        if (!currentUser) {
+            const stored = localStorage.getItem('gnx_user');
+            if (stored) {
+                userData = JSON.parse(stored);
+                currentUser = { uid: userData.uid, name: userData.name, email: userData.email };
+            } else {
+                return;
+            }
+        }
+
+        document.getElementById('app').style.display = 'block';
+        document.getElementById('landingPage').style.display = 'none';
+        document.getElementById('mobileNav').style.display = 'flex';
+        
+        if (currentUser?.uid) {
+            try {
+                const response = await getUserData(currentUser.uid);
+                if (response.success) {
+                    userData = response.user;
+                    localStorage.setItem('gnx_user', JSON.stringify(userData));
+                }
+            } catch (err) {
+                console.log('Using cached user data');
+            }
+        }
+
+        if (userData) {
+            document.getElementById('userNameDisplay').textContent = userData.name || 'User';
+            document.getElementById('userAvatar').textContent = (userData.name || 'U')[0].toUpperCase();
+            document.getElementById('profileName').value = userData.name || '';
+            document.getElementById('profileEmail').value = userData.email || '';
+            document.getElementById('profileRefCode').value = userData.referral_code || '';
+            
+            updateDashboard();
+            loadShortlinks();
+            loadPTCAds();
+            loadTasks();
+            loadHistory();
+        }
+        hideLoading();
+    }
+
+    function updateDashboard() {
+        if (!userData) return;
+        document.getElementById('dashBalance').textContent = '$' + (userData.balance || 0).toFixed(4);
+        document.getElementById('dashEarned').textContent = '$' + (userData.total_earned || 0).toFixed(4);
+        document.getElementById('dashWithdrawn').textContent = '$' + (userData.total_withdrawn || 0).toFixed(4);
+        document.getElementById('dashTasks').textContent = userData.completed_tasks || 0;
+    }
+
+    // ============================================================
+    // LOAD SHORTLINKS
+    // ============================================================
+    async function loadShortlinks() {
+        const container = document.getElementById('shortlinksList');
+        try {
+            const response = await getShortlinks();
+            if (!response.success || !response.shortlinks) {
+                container.innerHTML = `<div class="text-muted text-center" style="padding:40px;">No shortlinks available</div>`;
+                return;
+            }
+
+            const items = response.shortlinks;
+            container.innerHTML = items.map(s => `
+                <div class="task-card">
+                    <div class="info">
+                        <h4>${s.title}</h4>
+                        <p>${s.description || ''} • ${s.provider || 'shortlink'}</p>
+                    </div>
+                    <div class="reward">+$${(s.reward || 0).toFixed(4)}</div>
+                    <div class="actions">
+                        <button class="btn btn-primary btn-sm" onclick="completeShortlink('${s.id}', ${s.reward})">START</button>
+                    </div>
+                </div>
+            `).join('');
+        } catch (err) {
+            console.error('Error loading shortlinks:', err);
+        }
+    }
+
+    async function completeShortlink(id, reward) {
+        showToast('Opening shortlink...', 'info');
+        setTimeout(async () => {
+            const response = await completeTaskRequest(currentUser.uid, id, reward);
+            if (response.success) {
+                await refreshUserData();
+                showToast(`✅ Earned $${reward.toFixed(4)}!`, 'success');
+            } else {
+                showToast('❌ ' + response.error, 'error');
+            }
+        }, 3000);
+    }
+
+    // ============================================================
+    // LOAD PTC ADS
+    // ============================================================
+    async function loadPTCAds() {
+        const container = document.getElementById('ptcList');
+        try {
+            const response = await getPTCAds();
+            if (!response.success || !response.ptcAds) {
+                container.innerHTML = `<div class="text-muted text-center" style="padding:40px;">No PTC ads available</div>`;
+                return;
+            }
+
+            const items = response.ptcAds;
+            container.innerHTML = items.map(p => `
+                <div class="task-card">
+                    <div class="info">
+                        <h4>${p.title}</h4>
+                        <p>${p.description || ''} • View for ${p.view_duration || 5}s</p>
+                    </div>
+                    <div class="reward">+$${(p.reward || 0).toFixed(4)}</div>
+                    <div class="actions">
+                        <button class="btn btn-primary btn-sm" onclick="viewPTC('${p.id}', ${p.reward}, ${p.view_duration || 5})">View Ad</button>
+                    </div>
+                </div>
+            `).join('');
+        } catch (err) {
+            console.error('Error loading PTC ads:', err);
+        }
+    }
+
+    async function viewPTC(id, reward, duration) {
+        showToast(`View ad for ${duration} seconds...`, 'info');
+        let seconds = duration;
+        const interval = setInterval(async () => {
+            seconds--;
+            if (seconds <= 0) {
+                clearInterval(interval);
+                const response = await completeTaskRequest(currentUser.uid, id, reward);
+                if (response.success) {
+                    await refreshUserData();
+                    showToast(`✅ Earned $${reward.toFixed(4)}!`, 'success');
+                } else {
+                    showToast('❌ ' + response.error, 'error');
+                }
+            }
+        }, 1000);
+    }
+
+    // ============================================================
+    // LOAD TASKS
+    // ============================================================
+    async function loadTasks() {
+        const container = document.getElementById('tasksList');
+        try {
+            const response = await getTasks();
+            if (!response.success || !response.tasks) {
+                container.innerHTML = `<div class="text-muted text-center" style="padding:40px;">No tasks available</div>`;
+                return;
+            }
+
+            const items = response.tasks;
+            container.innerHTML = items.map(t => `
+                <div class="task-card">
+                    <div class="info">
+                        <h4>${t.title}</h4>
+                        <p>${t.description || ''} • ${t.category || 'task'}</p>
+                    </div>
+                    <div class="reward">+$${(t.reward || 0).toFixed(4)}</div>
+                    <div class="actions">
+                        <button class="btn btn-primary btn-sm" onclick="completeTask('${t.id}', ${t.reward})">Start Task</button>
+                    </div>
+                </div>
+            `).join('');
+        } catch (err) {
+            console.error('Error loading tasks:', err);
+        }
+    }
+
+    async function completeTask(id, reward) {
+        showToast('Opening task...', 'info');
+        setTimeout(async () => {
+            const response = await completeTaskRequest(currentUser.uid, id, reward);
+            if (response.success) {
+                await refreshUserData();
+                showToast(`✅ Earned $${reward.toFixed(4)}!`, 'success');
+            } else {
+                showToast('❌ ' + response.error, 'error');
+            }
+        }, 3000);
+    }
+
+    // ============================================================
+    // REFRESH USER DATA
+    // ============================================================
+    async function refreshUserData() {
+        const response = await getUserData(currentUser.uid);
+        if (response.success) {
+            userData = response.user;
+            localStorage.setItem('gnx_user', JSON.stringify(userData));
+            updateDashboard();
+        }
+    }
+
+    // ============================================================
+    // WITHDRAW
+    // ============================================================
+    function selectMethod(method) {
+        selectedMethod = method;
+        document.querySelectorAll('.withdraw-option').forEach(el => el.classList.remove('selected'));
+        document.getElementById('method-' + method).classList.add('selected');
+
+        const container = document.getElementById('withdrawFormContainer');
+        container.classList.remove('hidden');
+
+        const title = document.getElementById('withdrawFormTitle');
+        const desc = document.getElementById('withdrawFormDesc');
+        const fields = document.getElementById('withdrawFields');
+        const minText = document.getElementById('withdrawMinText');
+
+        if (method === 'faucetpay') {
+            title.textContent = '💰 FaucetPay USDT Withdrawal';
+            desc.textContent = '⚡ Automatic instant payment to your FaucetPay wallet';
+            fields.innerHTML = `
+                <div class="form-group">
+                    <label>FaucetPay Email *</label>
+                    <input type="email" id="withdrawAccount" placeholder="your@faucetpay.email" oninput="calculateAmount()">
+                </div>
+                <div class="form-group">
+                    <label>Amount (USDT) *</label>
+                    <input type="number" id="withdrawAmount" placeholder="0.0100" min="0.01" step="0.0001" oninput="calculateAmount()">
+                </div>
+            `;
+            minText.textContent = 'Minimum withdrawal: $0.0100 USDT';
+            document.getElementById('withdrawSubmitBtn').textContent = '⚡ Withdraw Now (Instant)';
+        } else {
+            title.textContent = '🎁 Amazon Gift Card';
+            desc.textContent = '🕐 Manual processing within 24 hours';
+            
+            let giftValues = [
+                { usd: 0.10, inr: 10 },
+                { usd: 0.20, inr: 20 },
+                { usd: 0.50, inr: 50 },
+                { usd: 1.00, inr: 100 },
+                { usd: 2.00, inr: 200 }
+            ];
+            
+            fields.innerHTML = `
+                <div class="form-group">
+                    <label>Email for Gift Card *</label>
+                    <input type="email" id="withdrawAccount" placeholder="your@email.com" oninput="calculateAmount()">
+                </div>
+                <div class="form-group">
+                    <label>Select Gift Card Value</label>
+                    <div class="gift-card-options" id="giftCardOptions">
+                        ${giftValues.map(g => `
+                            <div class="gift-option" onclick="selectGiftValue(${g.usd}, ${g.inr})" data-usd="${g.usd}" data-inr="${g.inr}">
+                                <div class="usd">$${g.usd.toFixed(2)}</div>
+                                <div class="inr">₹${g.inr}</div>
+                                <div class="label">Amazon Gift Card</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <input type="hidden" id="withdrawAmount" value="">
+                    <input type="hidden" id="giftValue" value="">
+                </div>
+            `;
+            minText.textContent = 'Gift card will be sent to your email within 24 hours';
+            document.getElementById('withdrawSubmitBtn').textContent = '🎁 Request Gift Card';
+        }
+        calculateAmount();
+    }
+
+    function selectGiftValue(usd, inr) {
+        document.querySelectorAll('.gift-option').forEach(el => el.classList.remove('selected'));
+        const selected = document.querySelector(`.gift-option[data-usd="${usd}"]`);
+        if (selected) {
+            selected.classList.add('selected');
+            document.getElementById('withdrawAmount').value = usd;
+            document.getElementById('giftValue').value = inr;
+            calculateAmount();
+        }
+    }
+
+    function calculateAmount() {
+        const amount = parseFloat(document.getElementById('withdrawAmount').value) || 0;
+        const fee = amount * 0.005;
+        const net = amount - fee;
+        
+        document.getElementById('displayAmount').textContent = '$' + amount.toFixed(4);
+        document.getElementById('displayFee').textContent = '$' + fee.toFixed(4);
+        document.getElementById('displayNet').textContent = '$' + net.toFixed(4);
+    }
+
+    // ============================================================
+    // SUBMIT WITHDRAW
+    // ============================================================
+    async function submitWithdraw() {
+        if (isSubmitting) return;
+        
+        const account = document.getElementById('withdrawAccount').value.trim();
+        let amount = parseFloat(document.getElementById('withdrawAmount').value);
+        const submitBtn = document.getElementById('withdrawSubmitBtn');
+        
+        if (!account) {
+            showToast('Please enter your account details', 'error');
+            return;
+        }
+        
+        if (selectedMethod === 'giftcard') {
+            amount = parseFloat(document.getElementById('withdrawAmount').value);
+            const giftValue = parseFloat(document.getElementById('giftValue').value);
+            if (!amount || !giftValue) {
+                showToast('Please select a gift card value', 'error');
+                return;
+            }
+        }
+        
+        if (!amount || amount <= 0) {
+            showToast('Please enter a valid amount', 'error');
+            return;
+        }
+        
+        if (selectedMethod === 'faucetpay' && amount < 0.01) {
+            showToast('Minimum withdrawal is $0.0100 USDT', 'error');
+            return;
+        }
+        
+        if (userData.balance < amount) {
+            showToast('Insufficient balance!', 'error');
+            return;
+        }
+
+        isSubmitting = true;
+        submitBtn.disabled = true;
+        submitBtn.textContent = '⏳ Processing...';
+
+        try {
+            const response = await createWithdrawal(
+                currentUser.uid,
+                selectedMethod,
+                account,
+                amount,
+                selectedMethod === 'giftcard' ? parseFloat(document.getElementById('giftValue').value) : null
+            );
+
+            if (!response.success) {
+                showToast('❌ ' + response.error, 'error');
+                submitBtn.disabled = false;
+                submitBtn.textContent = selectedMethod === 'faucetpay' ? '⚡ Withdraw Now (Instant)' : '🎁 Request Gift Card';
+                isSubmitting = false;
+                return;
+            }
+
+            await refreshUserData();
+            
+            if (selectedMethod === 'faucetpay') {
+                showToast('⚡ Payment processing... Check your FaucetPay wallet!', 'success');
+            } else {
+                showToast('✅ Gift card request submitted! Will be processed within 24 hours.', 'success');
+            }
+            
+            loadHistory();
+            resetForm();
+
+        } catch (err) {
+            console.error('Withdrawal error:', err);
+            showToast('❌ Error: ' + err.message, 'error');
+        }
+
+        isSubmitting = false;
+        submitBtn.disabled = false;
+        submitBtn.textContent = selectedMethod === 'faucetpay' ? '⚡ Withdraw Now (Instant)' : '🎁 Request Gift Card';
+    }
+
+    function resetForm() {
+        document.getElementById('withdrawAccount').value = '';
+        document.getElementById('withdrawAmount').value = '';
+        document.getElementById('giftValue').value = '';
+        document.querySelectorAll('.gift-option').forEach(el => el.classList.remove('selected'));
+        document.getElementById('withdrawFormContainer').classList.add('hidden');
+        document.querySelectorAll('.withdraw-option').forEach(el => el.classList.remove('selected'));
+        selectedMethod = null;
+        calculateAmount();
+    }
+
+    // ============================================================
+    // HISTORY
+    // ============================================================
+    async function loadHistory() {
+        const container = document.getElementById('historyList');
+        const recentContainer = document.getElementById('recentWithdrawals');
+        
+        try {
+            const response = await getWithdrawals(currentUser.uid);
+            if (!response.success || !response.withdrawals) {
+                const emptyMsg = `<tr><td colspan="5" class="text-muted text-center">No withdrawals yet</td></tr>`;
+                container.innerHTML = emptyMsg;
+                recentContainer.innerHTML = `<tr><td colspan="4" class="text-muted text-center">No withdrawals yet</td></tr>`;
+                return;
+            }
+
+            const items = response.withdrawals;
+            
+            container.innerHTML = items.map(w => `
+                <tr>
+                    <td>${w.created_at ? new Date(w.created_at).toLocaleDateString() : 'N/A'}</td>
+                    <td>${w.method === 'faucetpay' ? '💰 FaucetPay' : '🎁 Gift Card'}</td>
+                    <td>$${(w.amount || 0).toFixed(4)}</td>
+                    <td><span class="status-badge ${w.status || 'pending'}">${w.status || 'pending'}</span></td>
+                    <td>${w.transaction_id || '—'}</td>
+                </tr>
+            `).join('');
+            
+            const recent = items.slice(0, 5);
+            recentContainer.innerHTML = recent.map(w => `
+                <tr>
+                    <td>${w.created_at ? new Date(w.created_at).toLocaleDateString() : 'N/A'}</td>
+                    <td>${w.method === 'faucetpay' ? '💰 FaucetPay' : '🎁 Gift Card'}</td>
+                    <td>$${(w.amount || 0).toFixed(4)}</td>
+                    <td><span class="status-badge ${w.status || 'pending'}">${w.status || 'pending'}</span></td>
+                </tr>
+            `).join('');
+            
+        } catch (err) {
+            console.error('Error loading history:', err);
+        }
+    }
+
+    // ============================================================
+    // PROFILE
+    // ============================================================
+    async function updateProfile(e) {
+        e.preventDefault();
+        const name = document.getElementById('profileName').value.trim();
+        if (!name) {
+            showToast('Name is required', 'error');
+            return;
+        }
+        try {
+            const response = await updateUser(currentUser.uid, name);
+            if (response.success) {
+                userData = response.user;
+                localStorage.setItem('gnx_user', JSON.stringify(userData));
+                document.getElementById('userNameDisplay').textContent = name;
+                document.getElementById('userAvatar').textContent = name[0].toUpperCase();
+                showToast('Profile updated!', 'success');
+            } else {
+                showToast('❌ ' + response.error, 'error');
+            }
+        } catch (err) {
+            showToast('Error: ' + err.message, 'error');
+        }
+    }
+
+    // ============================================================
+    // CHECK SESSION
+    // ============================================================
+    function checkSession() {
+        const stored = localStorage.getItem('gnx_user');
+        if (stored) {
+            try {
+                userData = JSON.parse(stored);
+                currentUser = { uid: userData.uid, name: userData.name, email: userData.email };
+                showDashboard();
+                return true;
+            } catch (err) {
+                console.error('Session restore error:', err);
+            }
+        }
+        return false;
+    }
+
+    // ============================================================
+    // INIT
+    // ============================================================
+    console.log('🚀 GNEXEN REWARD - Zeabur + Supabase Version');
+    console.log('🔑 SUPABASE_URL:', SUPABASE_URL);
+    console.log('🔑 SUPABASE_ANON_KEY:', SUPABASE_ANON_KEY.substring(0, 20) + '...');
+    console.log('⚡ FaucetPay withdrawals are AUTOMATIC');
+    console.log('🎁 Amazon Gift Cards: $0.10 = ₹10, $0.20 = ₹20, $0.50 = ₹50, $1.00 = ₹100, $2.00 = ₹200');
+
+    // Check for existing session
+    if (!checkSession()) {
+        hideLoading();
+    }
+
+    setTimeout(hideLoading, 3000);
+</script>
+</body>
+</html>

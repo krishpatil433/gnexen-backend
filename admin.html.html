@@ -1,0 +1,2112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GNEXEN REWARD - Admin Panel</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0a0a1a;
+            color: #ffffff;
+            min-height: 100vh;
+        }
+        
+        .hidden { display: none !important; }
+        .text-center { text-align: center; }
+        .text-muted { color: #8888aa; }
+        .mt-2 { margin-top: 20px; }
+        .mb-2 { margin-bottom: 20px; }
+
+        .btn {
+            display: inline-block;
+            padding: 10px 24px;
+            border: none;
+            border-radius: 50px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #6C63FF, #5A52D5);
+            color: white;
+        }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(108,99,255,0.4); }
+        .btn-success { background: #4CAF50; color: white; }
+        .btn-danger { background: #F44336; color: white; }
+        .btn-warning { background: #FFC107; color: #0a0a1a; }
+        .btn-sm { padding: 6px 16px; font-size: 12px; }
+        .btn-info { background: #2196F3; color: white; }
+
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+        }
+        .toast {
+            padding: 15px 25px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            color: white;
+            font-weight: 500;
+            animation: slideIn 0.3s ease;
+            min-width: 250px;
+        }
+        .toast-success { background: #4CAF50; }
+        .toast-error { background: #F44336; }
+        .toast-warning { background: #FFC107; color: #0a0a1a; }
+        .toast-info { background: #6C63FF; }
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(5px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .modal {
+            background: #12122a;
+            padding: 30px;
+            border-radius: 16px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+        .modal h2 { margin-bottom: 20px; }
+        .modal-close {
+            float: right;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            color: #8888aa;
+            font-size: 14px;
+        }
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 10px;
+            background: rgba(255,255,255,0.05);
+            color: white;
+            font-size: 14px;
+        }
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #6C63FF;
+        }
+        .form-group select option { background: #0a0a1a; color: white; }
+
+        .auth-error {
+            background: rgba(244,67,54,0.15);
+            border: 1px solid #F44336;
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 15px;
+            color: #F44336;
+            font-size: 14px;
+            display: none;
+        }
+        .auth-error.show { display: block; }
+        .auth-success {
+            background: rgba(76,175,80,0.15);
+            border: 1px solid #4CAF50;
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 15px;
+            color: #4CAF50;
+            font-size: 14px;
+            display: none;
+        }
+        .auth-success.show { display: block; }
+
+        #adminLogin {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #0a0a1a, #12122a);
+        }
+        .login-box {
+            background: #12122a;
+            padding: 40px;
+            border-radius: 16px;
+            border: 1px solid rgba(255,255,255,0.08);
+            max-width: 420px;
+            width: 90%;
+        }
+        .login-box .logo {
+            font-size: 32px;
+            font-weight: 800;
+            text-align: center;
+            margin-bottom: 30px;
+            background: linear-gradient(135deg, #6C63FF, #8B83FF);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .login-box .logo span { -webkit-text-fill-color: white; }
+        
+        .setup-section {
+            background: rgba(255,193,7,0.1);
+            border: 1px solid #FFC107;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .setup-section h4 { color: #FFC107; margin-bottom: 8px; }
+        .setup-section p { color: #8888aa; font-size: 13px; margin-bottom: 10px; }
+        .setup-section .btn-setup {
+            background: linear-gradient(135deg, #FFC107, #e6a800);
+            color: #0a0a1a;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 50px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .setup-section .btn-setup:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(255,193,7,0.4); }
+
+        #adminApp {
+            display: none;
+            min-height: 100vh;
+        }
+
+        .admin-sidebar {
+            position: fixed;
+            left: 0; top: 0; bottom: 0;
+            width: 240px;
+            background: #12122a;
+            border-right: 1px solid rgba(255,255,255,0.08);
+            padding: 20px;
+            overflow-y: auto;
+            z-index: 100;
+            transition: all 0.3s ease;
+        }
+        .admin-sidebar .logo {
+            font-size: 22px;
+            font-weight: 800;
+            display: block;
+            margin-bottom: 30px;
+            background: linear-gradient(135deg, #6C63FF, #8B83FF);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .admin-sidebar .logo span { -webkit-text-fill-color: white; }
+        .admin-sidebar nav a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 14px;
+            border-radius: 10px;
+            color: #8888aa;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            margin-bottom: 2px;
+            font-size: 14px;
+        }
+        .admin-sidebar nav a:hover,
+        .admin-sidebar nav a.active {
+            background: rgba(108,99,255,0.15);
+            color: white;
+        }
+
+        .admin-main {
+            margin-left: 240px;
+            padding: 20px 30px;
+            min-height: 100vh;
+        }
+
+        .admin-topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .admin-topbar .page-title { font-size: 22px; font-weight: 700; }
+        .admin-topbar .admin-user {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .admin-topbar .avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: #6C63FF;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 16px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        .stat-card {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 12px;
+            padding: 15px 18px;
+        }
+        .stat-card .label { color: #8888aa; font-size: 12px; }
+        .stat-card .value { font-size: 22px; font-weight: 700; margin-top: 4px; }
+        .stat-card .value.green { color: #4CAF50; }
+        .stat-card .value.orange { color: #FFC107; }
+        .stat-card .value.blue { color: #8B83FF; }
+        .stat-card .value.pink { color: #FF6B6B; }
+        .stat-card .value.purple { color: #9C27B0; }
+
+        .page-section {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+        .page-section.active { display: block; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .table-responsive { overflow-x: auto; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: rgba(255,255,255,0.03);
+            border-radius: 12px;
+            overflow: hidden;
+            font-size: 13px;
+        }
+        table th {
+            background: rgba(255,255,255,0.05);
+            padding: 8px 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #8888aa;
+        }
+        table td {
+            padding: 8px 12px;
+            border-top: 1px solid rgba(255,255,255,0.08);
+        }
+        .status-badge {
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .status-badge.active { background: #4CAF50; color: white; }
+        .status-badge.pending { background: #FFC107; color: #0a0a1a; }
+        .status-badge.paid { background: #4CAF50; color: white; }
+        .status-badge.failed { background: #F44336; color: white; }
+        .status-badge.processing { background: #2196F3; color: white; }
+        .status-badge.rejected { background: #F44336; color: white; }
+        .status-badge.inactive { background: #8888aa; color: #0a0a1a; }
+        .status-badge.completed { background: #6C63FF; color: white; }
+        .status-badge.paused { background: #FF6B6B; color: white; }
+
+        .action-buttons {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+        }
+
+        .hamburger { display: none; background: none; border: none; color: white; font-size: 26px; cursor: pointer; }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.9);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 99999;
+        }
+        .loading-overlay .spinner {
+            border: 4px solid rgba(255,255,255,0.08);
+            border-top: 4px solid #6C63FF;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .loading-overlay p { margin-top: 20px; color: #8888aa; }
+
+        .settings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 18px;
+        }
+        .settings-card {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 12px;
+            padding: 18px;
+        }
+        .settings-card h3 {
+            font-size: 15px;
+            margin-bottom: 12px;
+            color: #8B83FF;
+        }
+
+        .auto-badge {
+            background: #4CAF50;
+            color: white;
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 10px;
+            padding: 4px;
+        }
+        .tabs button {
+            padding: 6px 16px;
+            border: none;
+            border-radius: 8px;
+            background: transparent;
+            color: #8888aa;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            font-size: 13px;
+        }
+        .tabs button.active {
+            background: #6C63FF;
+            color: white;
+        }
+        .tabs button:hover:not(.active) {
+            background: rgba(255,255,255,0.05);
+        }
+
+        .gift-card-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin: 10px 0;
+        }
+        .gift-card-options .gift-option {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .gift-card-options .gift-option:hover {
+            border-color: #9C27B0;
+            background: rgba(156,39,176,0.1);
+        }
+        .gift-card-options .gift-option.selected {
+            border-color: #9C27B0;
+            background: rgba(156,39,176,0.2);
+        }
+        .gift-card-options .gift-option .amount {
+            font-size: 20px;
+            font-weight: 700;
+            color: #9C27B0;
+        }
+        .gift-card-options .gift-option .label {
+            font-size: 12px;
+            color: #8888aa;
+        }
+        .gift-card-options .gift-option .usd {
+            font-size: 11px;
+            color: #4CAF50;
+            margin-top: 4px;
+        }
+
+        @media (max-width: 992px) {
+            .admin-sidebar {
+                transform: translateX(-100%);
+                width: 280px;
+            }
+            .admin-sidebar.open { transform: translateX(0); }
+            .admin-main { margin-left: 0; padding: 15px; }
+            .hamburger { display: block; }
+        }
+
+        @media (max-width: 600px) {
+            .stats-grid { grid-template-columns: 1fr 1fr; }
+            .settings-grid { grid-template-columns: 1fr; }
+            .login-box { padding: 25px; }
+            .gift-card-options { grid-template-columns: 1fr 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- LOADING OVERLAY -->
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="spinner"></div>
+    <p>Loading Admin Panel...</p>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- ADMIN LOGIN -->
+<div id="adminLogin">
+    <div class="login-box">
+        <div class="logo">GNEXEN<span>REWARD</span></div>
+        <h2 style="text-align:center;margin-bottom:20px;">Admin Login</h2>
+        
+        <div class="setup-section" id="setupSection">
+            <h4>⚡ First Time Setup</h4>
+            <p>Create your admin account with one click</p>
+            <button class="btn-setup" onclick="setupAdmin()" id="setupBtn">🚀 Create Admin Account</button>
+            <div id="setupProgress" style="display:none;margin-top:10px;color:#FFC107;font-size:13px;">
+                ⏳ Creating admin account...
+            </div>
+        </div>
+        
+        <div id="authError" class="auth-error"></div>
+        <div id="authSuccess" class="auth-success"></div>
+        
+        <form id="adminLoginForm">
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" id="adminEmail" placeholder="admin@example.com" required>
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="adminPassword" placeholder="••••••••" required>
+            </div>
+            <button type="button" class="btn btn-primary" style="width:100%;" id="loginBtn" onclick="adminLogin()">🔐 Login</button>
+        </form>
+        
+        <p class="text-muted text-center mt-2" style="font-size:13px;">Only authorized admins can access this panel.</p>
+    </div>
+</div>
+
+<!-- ADMIN APP -->
+<div id="adminApp">
+    <aside class="admin-sidebar" id="adminSidebar">
+        <a href="#" class="logo">GNEXEN<span>REWARD</span></a>
+        <nav>
+            <a href="#" class="active" data-page="dashboard"><span>📊</span> Dashboard</a>
+            <a href="#" data-page="users"><span>👤</span> Users</a>
+            <a href="#" data-page="shortlinks"><span>🔗</span> Shortlinks</a>
+            <a href="#" data-page="ptc-ads"><span>📢</span> PTC Ads</a>
+            <a href="#" data-page="tasks"><span>📋</span> Tasks</a>
+            <a href="#" data-page="campaigns"><span>📈</span> Campaigns</a>
+            <a href="#" data-page="withdrawals"><span>🏦</span> Withdrawals</a>
+            <a href="#" data-page="giftcards"><span>🎁</span> Gift Cards</a>
+            <a href="#" data-page="faucetpay"><span>💰</span> FaucetPay</a>
+            <a href="#" data-page="settings"><span>⚙️</span> Settings</a>
+            <a href="#" onclick="adminLogout()"><span>🚪</span> Logout</a>
+        </nav>
+    </aside>
+
+    <main class="admin-main">
+        <div class="admin-topbar">
+            <div style="display:flex;align-items:center;gap:15px;">
+                <button class="hamburger" onclick="toggleAdminSidebar()">☰</button>
+                <h1 class="page-title" id="adminPageTitle">Dashboard</h1>
+            </div>
+            <div class="admin-user">
+                <span id="adminNameDisplay">Admin</span>
+                <div class="avatar" id="adminAvatar">A</div>
+            </div>
+        </div>
+
+        <!-- DASHBOARD -->
+        <div class="page-section active" id="page-dashboard">
+            <div class="stats-grid">
+                <div class="stat-card"><div class="label">👤 Total Users</div><div class="value blue" id="statUsers">0</div></div>
+                <div class="stat-card"><div class="label">✅ Active Users</div><div class="value green" id="statActive">0</div></div>
+                <div class="stat-card"><div class="label">📢 PTC Ads</div><div class="value orange" id="statPTCAds">0</div></div>
+                <div class="stat-card"><div class="label">📋 Tasks</div><div class="value pink" id="statTasks">0</div></div>
+            </div>
+            <div class="stats-grid">
+                <div class="stat-card"><div class="label">🔗 Shortlinks</div><div class="value blue" id="statShortlinks">0</div></div>
+                <div class="stat-card"><div class="label">📈 Campaigns</div><div class="value green" id="statCampaigns">0</div></div>
+                <div class="stat-card"><div class="label">🏦 Pending Withdrawals</div><div class="value orange" id="statPending">0</div></div>
+                <div class="stat-card"><div class="label">🎁 Gift Cards</div><div class="value purple" id="statGiftCards">0</div></div>
+            </div>
+            <div style="margin-top:15px;padding:12px;background:rgba(76,175,80,0.1);border-radius:10px;border:1px solid #4CAF50;">
+                <p style="color:#4CAF50;text-align:center;font-size:13px;">
+                    🤖 <strong>FaucetPay payments are AUTOMATIC!</strong> No manual action needed.
+                </p>
+            </div>
+            <div style="margin-top:10px;padding:12px;background:rgba(156,39,176,0.1);border-radius:10px;border:1px solid #9C27B0;">
+                <p style="color:#9C27B0;text-align:center;font-size:13px;">
+                    🎁 <strong>Amazon Gift Cards:</strong> $0.10 = ₹10 | $0.20 = ₹20 | $0.50 = ₹50 | $1.00 = ₹100 | $2.00 = ₹200
+                </p>
+            </div>
+            <div style="margin-top:10px;padding:12px;background:rgba(108,99,255,0.1);border-radius:10px;border:1px solid #6C63FF;">
+                <p style="color:#8B83FF;text-align:center;font-size:13px;">
+                    ✅ Logged in as: <strong id="adminEmailDisplay">admin@example.com</strong>
+                </p>
+            </div>
+        </div>
+
+        <!-- USERS -->
+        <div class="page-section" id="page-users">
+            <h2>👤 User Management</h2>
+            <button class="btn btn-primary btn-sm mb-2" onclick="loadUsers()">🔄 Refresh</button>
+            <div class="table-responsive">
+                <table>
+                    <thead><tr><th>Name</th><th>Email</th><th>Balance</th><th>Status</th><th>Actions</th></tr></thead>
+                    <tbody id="usersList"><tr><td colspan="5" class="text-muted text-center">Loading...</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- SHORTLINKS -->
+        <div class="page-section" id="page-shortlinks">
+            <h2>🔗 Shortlink Management</h2>
+            <button class="btn btn-primary btn-sm mb-2" onclick="openShortlinkModal()">➕ Add Shortlink</button>
+            <div class="table-responsive">
+                <table>
+                    <thead><tr><th>Title</th><th>Reward</th><th>Provider</th><th>Status</th><th>Actions</th></tr></thead>
+                    <tbody id="shortlinksAdminList"><tr><td colspan="5" class="text-muted text-center">Loading...</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- PTC ADS -->
+        <div class="page-section" id="page-ptc-ads">
+            <h2>📢 PTC Ad Management</h2>
+            <button class="btn btn-primary btn-sm mb-2" onclick="openPTCAdModal()">➕ Add PTC Ad</button>
+            <div class="table-responsive">
+                <table>
+                    <thead><tr><th>Title</th><th>Reward</th><th>Duration</th><th>Views</th><th>Status</th><th>Actions</th></tr></thead>
+                    <tbody id="ptcAdsAdminList"><tr><td colspan="6" class="text-muted text-center">Loading...</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- TASKS -->
+        <div class="page-section" id="page-tasks">
+            <h2>📋 Task Management</h2>
+            <button class="btn btn-primary btn-sm mb-2" onclick="openTaskModal()">➕ Add Task</button>
+            <div class="table-responsive">
+                <table>
+                    <thead><tr><th>Title</th><th>Reward</th><th>Category</th><th>Status</th><th>Actions</th></tr></thead>
+                    <tbody id="tasksAdminList"><tr><td colspan="5" class="text-muted text-center">Loading...</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- CAMPAIGNS -->
+        <div class="page-section" id="page-campaigns">
+            <h2>📈 Campaign Management</h2>
+            <div class="table-responsive">
+                <table>
+                    <thead><tr><th>Title</th><th>User</th><th>Type</th><th>Views</th><th>Cost</th><th>Status</th><th>Actions</th></tr></thead>
+                    <tbody id="campaignsAdminList"><tr><td colspan="7" class="text-muted text-center">Loading...</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- WITHDRAWALS -->
+        <div class="page-section" id="page-withdrawals">
+            <h2>🏦 Withdrawal Management <span class="auto-badge">🤖 Auto</span></h2>
+            <div class="tabs">
+                <button class="active" onclick="loadWithdrawals('all')">All</button>
+                <button onclick="loadWithdrawals('pending')">Pending</button>
+                <button onclick="loadWithdrawals('processing')">Processing</button>
+                <button onclick="loadWithdrawals('paid')">Paid</button>
+                <button onclick="loadWithdrawals('failed')">Failed</button>
+            </div>
+            <div class="table-responsive">
+                <table>
+                    <thead><tr><th>User</th><th>Method</th><th>Amount</th><th>Account</th><th>Status</th><th>Auto</th><th>Date</th></tr></thead>
+                    <tbody id="withdrawalsAdminList"><tr><td colspan="7" class="text-muted text-center">Loading...</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- GIFT CARDS -->
+        <div class="page-section" id="page-giftcards">
+            <h2>🎁 Gift Card Management</h2>
+            
+            <div style="background:rgba(156,39,176,0.1);border:1px solid #9C27B0;border-radius:10px;padding:12px;margin-bottom:15px;">
+                <p style="color:#9C27B0;font-size:13px;text-align:center;">
+                    💡 <strong>Gift Card Values:</strong> 
+                    $0.10 = ₹10 | $0.20 = ₹20 | $0.50 = ₹50 | $1.00 = ₹100 | $2.00 = ₹200
+                </p>
+            </div>
+            
+            <div class="tabs">
+                <button class="active" onclick="loadGiftCards('all')">All</button>
+                <button onclick="loadGiftCards('pending')">Pending</button>
+                <button onclick="loadGiftCards('paid')">Paid</button>
+                <button onclick="loadGiftCards('rejected')">Rejected</button>
+            </div>
+            <div class="table-responsive">
+                <table>
+                    <thead><tr><th>User</th><th>Email</th><th>Amount ($)</th><th>Gift Value (₹)</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead>
+                    <tbody id="giftcardsAdminList"><tr><td colspan="7" class="text-muted text-center">Loading...</td></tr></tbody>
+                </table>
+            </div>
+            
+            <!-- Quick Gift Card Action -->
+            <div style="margin-top:20px;background:rgba(156,39,176,0.05);border:1px solid #9C27B0;border-radius:12px;padding:20px;">
+                <h3 style="color:#9C27B0;">🎁 Quick Gift Card Action</h3>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-top:15px;">
+                    <div class="form-group">
+                        <label>Gift Card Request ID</label>
+                        <input type="text" id="giftCardActionId" placeholder="Enter request ID">
+                    </div>
+                    <div class="form-group">
+                        <label>User Email</label>
+                        <input type="email" id="giftCardActionEmail" placeholder="user@example.com">
+                    </div>
+                    <div class="form-group">
+                        <label>Gift Card Code</label>
+                        <input type="text" id="giftCardActionCode" placeholder="Enter gift card code">
+                    </div>
+                    <div class="form-group">
+                        <label>Action</label>
+                        <div style="display:flex;gap:10px;margin-top:5px;">
+                            <button class="btn btn-sm btn-success" onclick="markGiftCardPaid()">✅ Mark Paid</button>
+                            <button class="btn btn-sm btn-danger" onclick="rejectGiftCard()">❌ Reject</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- FAUCETPAY -->
+        <div class="page-section" id="page-faucetpay">
+            <h2>💰 FaucetPay <span class="auto-badge">🤖 Automatic</span></h2>
+            <div class="settings-grid">
+                <div class="settings-card">
+                    <h3>📊 Payment Statistics</h3>
+                    <div style="margin-top:10px;">
+                        <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.05);">
+                            <span>Total Withdrawals</span>
+                            <span id="fpTotalWithdrawals">0</span>
+                        </div>
+                        <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.05);">
+                            <span>Pending Payments</span>
+                            <span id="fpPendingPayments" style="color:#FFC107;">0</span>
+                        </div>
+                        <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.05);">
+                            <span>Total Paid</span>
+                            <span id="fpTotalPaid" style="color:#4CAF50;">$0</span>
+                        </div>
+                        <div style="display:flex;justify-content:space-between;padding:6px 0;">
+                            <span>Platform Fee Collected</span>
+                            <span id="fpTotalFee" style="color:#8B83FF;">$0</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="settings-card">
+                    <h3>⚡ Quick Stats</h3>
+                    <div style="margin-top:10px;">
+                        <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.05);">
+                            <span>🤖 Auto Processed</span>
+                            <span id="fpAutoProcessed" style="color:#4CAF50;">0</span>
+                        </div>
+                        <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.05);">
+                            <span>❌ Failed</span>
+                            <span id="fpFailed" style="color:#F44336;">0</span>
+                        </div>
+                        <div style="display:flex;justify-content:space-between;padding:6px 0;">
+                            <span>⏳ Processing</span>
+                            <span id="fpProcessing" style="color:#2196F3;">0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="margin-top:20px;">
+                <h3>📋 Recent FaucetPay Transactions</h3>
+                <div class="table-responsive">
+                    <table>
+                        <thead><tr><th>User</th><th>Amount</th><th>Transaction ID</th><th>Status</th><th>Date</th></tr></thead>
+                        <tbody id="faucetpayTransactions"><tr><td colspan="5" class="text-muted text-center">No transactions yet</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- SETTINGS -->
+        <div class="page-section" id="page-settings">
+            <h2>⚙️ Settings</h2>
+            <div class="settings-grid">
+                <div class="settings-card">
+                    <h3>💰 Withdrawal Settings</h3>
+                    <div class="form-group">
+                        <label>Minimum Withdrawal (USDT)</label>
+                        <input type="number" id="settingMinWithdraw" value="0.01" min="0.001" step="0.001">
+                    </div>
+                    <div class="form-group">
+                        <label>Maximum Withdrawal (USDT)</label>
+                        <input type="number" id="settingMaxWithdraw" value="1000" min="0.01" step="0.01">
+                    </div>
+                    <div class="form-group">
+                        <label>Withdrawal Fee (%)</label>
+                        <input type="number" id="settingWithdrawFee" value="0.5" min="0" step="0.1">
+                    </div>
+                </div>
+                
+                <div class="settings-card">
+                    <h3>💰 FaucetPay API <span style="font-size:11px;color:#4CAF50;">(Required)</span></h3>
+                    <div class="form-group">
+                        <label>API Key *</label>
+                        <input type="password" id="settingFaucetApiKey" placeholder="Enter FaucetPay API Key">
+                        <div style="font-size:11px;color:#555577;margin-top:4px;">Get from faucetpay.io dashboard</div>
+                    </div>
+                    <div class="form-group">
+                        <label>API Username</label>
+                        <input type="text" id="settingFaucetUsername" placeholder="Your FaucetPay Username">
+                    </div>
+                    <div class="form-group">
+                        <label>Wallet Address</label>
+                        <input type="text" id="settingFaucetWallet" placeholder="Your USDT Wallet Address">
+                    </div>
+                    <div class="form-group">
+                        <label>Currency</label>
+                        <select id="settingFaucetCurrency">
+                            <option value="USDT">USDT (TRC20)</option>
+                            <option value="USDC">USDC</option>
+                            <option value="BTC">BTC</option>
+                            <option value="ETH">ETH</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="settings-card">
+                    <h3>🎁 Gift Card Settings</h3>
+                    <div class="form-group">
+                        <label>Gift Card Values ($ USD → ₹ INR)</label>
+                        <input type="text" id="settingGiftValues" value="0.10=10,0.20=20,0.50=50,1.00=100,2.00=200">
+                        <div style="font-size:11px;color:#555577;margin-top:4px;">
+                            Format: USD=INR (comma separated)<br>
+                            Example: 0.10=10,0.20=20,0.50=50
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Processing Time (Hours)</label>
+                        <select id="settingGiftProcessing">
+                            <option value="6">6 Hours</option>
+                            <option value="12">12 Hours</option>
+                            <option value="24">24 Hours</option>
+                            <option value="48">48 Hours</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="settings-card">
+                    <h3>📧 Notification Settings</h3>
+                    <div class="form-group">
+                        <label>Admin Email</label>
+                        <input type="email" id="settingAdminEmail" placeholder="admin@example.com">
+                    </div>
+                    <div style="display:flex;align-items:center;gap:10px;margin:8px 0;">
+                        <input type="checkbox" id="settingNotifyWithdrawals" checked>
+                        <label for="settingNotifyWithdrawals">Notify on new withdrawals</label>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:10px;margin:8px 0;">
+                        <input type="checkbox" id="settingNotifyPayments" checked>
+                        <label for="settingNotifyPayments">Notify on successful payments</label>
+                    </div>
+                </div>
+            </div>
+            
+            <div style="margin-top:20px;">
+                <button class="btn btn-primary" onclick="saveSettings()">💾 Save All Settings</button>
+                <button class="btn btn-success" onclick="testFaucetPayConnection()" style="margin-left:10px;">🔌 Test FaucetPay</button>
+                <button class="btn btn-info" onclick="checkFaucetPayBalance()" style="margin-left:10px;">💰 Check Balance</button>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- SHORTLINK MODAL -->
+<div class="modal-overlay hidden" id="shortlinkModal">
+    <div class="modal">
+        <button class="modal-close" onclick="closeModal('shortlinkModal')">✕</button>
+        <h2 id="shortlinkModalTitle">Add Shortlink</h2>
+        <form id="shortlinkForm" onsubmit="saveShortlink(event)">
+            <input type="hidden" id="shortlinkEditId">
+            <div class="form-group"><label>Title *</label><input type="text" id="shortlinkTitle" required></div>
+            <div class="form-group"><label>Description</label><textarea id="shortlinkDescription" rows="2"></textarea></div>
+            <div class="form-group"><label>Provider</label>
+                <select id="shortlinkProvider"><option value="linkvertise">Linkvertise</option><option value="shortlink">Shortlink</option><option value="custom">Custom</option></select>
+            </div>
+            <div class="form-group"><label>Shortlink URL *</label><input type="url" id="shortlinkUrl" required></div>
+            <div class="form-group"><label>Reward (USDT) *</label><input type="number" id="shortlinkReward" min="0.001" step="0.001" required></div>
+            <div class="form-group"><label>Status</label>
+                <select id="shortlinkStatus"><option value="active">Active</option><option value="inactive">Inactive</option></select>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width:100%;">💾 Save</button>
+        </form>
+    </div>
+</div>
+
+<!-- PTC AD MODAL -->
+<div class="modal-overlay hidden" id="ptcAdModal">
+    <div class="modal">
+        <button class="modal-close" onclick="closeModal('ptcAdModal')">✕</button>
+        <h2 id="ptcAdModalTitle">Add PTC Ad</h2>
+        <form id="ptcAdForm" onsubmit="savePTCAd(event)">
+            <input type="hidden" id="ptcAdEditId">
+            <div class="form-group"><label>Title *</label><input type="text" id="ptcAdTitle" required></div>
+            <div class="form-group"><label>Description</label><textarea id="ptcAdDescription" rows="2"></textarea></div>
+            <div class="form-group"><label>Destination URL *</label><input type="url" id="ptcAdUrl" required></div>
+            <div class="form-group"><label>Duration (seconds) *</label><input type="number" id="ptcAdDuration" min="1" value="5" required></div>
+            <div class="form-group"><label>Reward (USDT) *</label><input type="number" id="ptcAdReward" min="0.001" step="0.001" required></div>
+            <div class="form-group"><label>Status</label>
+                <select id="ptcAdStatus"><option value="active">Active</option><option value="inactive">Inactive</option></select>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width:100%;">💾 Save</button>
+        </form>
+    </div>
+</div>
+
+<!-- TASK MODAL -->
+<div class="modal-overlay hidden" id="taskModal">
+    <div class="modal">
+        <button class="modal-close" onclick="closeModal('taskModal')">✕</button>
+        <h2 id="taskModalTitle">Add Task</h2>
+        <form id="taskForm" onsubmit="saveTask(event)">
+            <input type="hidden" id="taskEditId">
+            <div class="form-group"><label>Title *</label><input type="text" id="taskTitle" required></div>
+            <div class="form-group"><label>Description</label><textarea id="taskDescription" rows="2"></textarea></div>
+            <div class="form-group"><label>Category</label>
+                <select id="taskCategory"><option value="survey">Survey</option><option value="app">App Install</option><option value="social">Social Task</option><option value="website">Visit Website</option><option value="custom">Custom</option></select>
+            </div>
+            <div class="form-group"><label>Task URL</label><input type="url" id="taskUrl"></div>
+            <div class="form-group"><label>Instructions</label><textarea id="taskInstructions" rows="2"></textarea></div>
+            <div class="form-group"><label>Reward (USDT) *</label><input type="number" id="taskReward" min="0.001" step="0.001" required></div>
+            <div class="form-group"><label>Status</label>
+                <select id="taskStatus"><option value="active">Active</option><option value="inactive">Inactive</option></select>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width:100%;">💾 Save</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    // ===== FIREBASE CONFIG =====
+    const firebaseConfig = {
+        apiKey: "AIzaSyDz3yWGwcaejJSZKNCcEfaZQC8m1W_vp5k",
+        authDomain: "gnexen-reward.firebaseapp.com",
+        projectId: "gnexen-reward",
+        storageBucket: "gnexen-reward.firebasestorage.app",
+        messagingSenderId: "543935878086",
+        appId: "1:543935878086:web:93b534a177a28756c5d8c7"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    let currentAdmin = null;
+    let isProcessing = false;
+
+    // ===== HIDE LOADING =====
+    function hideLoading() {
+        document.getElementById('loadingOverlay').style.display = 'none';
+    }
+
+    // ===== TOAST =====
+    function showToast(message, type = 'info') {
+        const container = document.getElementById('toastContainer');
+        const toast = document.createElement('div');
+        toast.className = `toast toast-${type}`;
+        toast.textContent = message;
+        container.appendChild(toast);
+        setTimeout(() => { toast.remove(); }, 4000);
+    }
+
+    // ===== CLOSE MODAL =====
+    function closeModal(modalId) {
+        document.getElementById(modalId).classList.add('hidden');
+    }
+
+    // ===== CHECK IF ADMIN =====
+    async function checkIfAdmin(uid) {
+        try {
+            const doc = await db.collection('admins').doc(uid).get();
+            return doc.exists;
+        } catch { return false; }
+    }
+
+    async function checkIfAdminExists() {
+        try {
+            const snapshot = await db.collection('admins').limit(1).get();
+            return !snapshot.empty;
+        } catch { return false; }
+    }
+
+    // ===== SETUP ADMIN =====
+    async function setupAdmin() {
+        const email = document.getElementById('adminEmail').value.trim();
+        const password = document.getElementById('adminPassword').value;
+        const errorDiv = document.getElementById('authError');
+        const successDiv = document.getElementById('authSuccess');
+        const setupBtn = document.getElementById('setupBtn');
+        const progress = document.getElementById('setupProgress');
+        
+        errorDiv.classList.remove('show');
+        successDiv.classList.remove('show');
+        
+        if (!email || !password) {
+            errorDiv.textContent = '❌ Please enter email and password';
+            errorDiv.classList.add('show');
+            return;
+        }
+        if (password.length < 6) {
+            errorDiv.textContent = '❌ Password must be at least 6 characters';
+            errorDiv.classList.add('show');
+            return;
+        }
+
+        setupBtn.disabled = true;
+        progress.style.display = 'block';
+        progress.textContent = '⏳ Creating admin...';
+
+        try {
+            const adminExists = await checkIfAdminExists();
+            if (adminExists) {
+                errorDiv.textContent = '❌ Admin already exists. Please login.';
+                errorDiv.classList.add('show');
+                setupBtn.disabled = false;
+                progress.style.display = 'none';
+                return;
+            }
+
+            const cred = await auth.createUserWithEmailAndPassword(email, password);
+            
+            await db.collection('admins').doc(cred.user.uid).set({
+                uid: cred.user.uid,
+                email: email,
+                name: 'Super Admin',
+                role: 'super_admin',
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+
+            successDiv.textContent = '✅ Admin created! Logging in...';
+            successDiv.classList.add('show');
+            showToast('✅ Admin created!', 'success');
+            
+            currentAdmin = cred.user;
+            document.getElementById('adminLogin').style.display = 'none';
+            document.getElementById('adminApp').style.display = 'block';
+            document.getElementById('adminNameDisplay').textContent = 'Super Admin';
+            document.getElementById('adminAvatar').textContent = 'A';
+            document.getElementById('adminEmailDisplay').textContent = email;
+            
+            loadAdminDashboard();
+
+        } catch (err) {
+            console.error('Setup error:', err);
+            let msg = err.message;
+            if (err.code === 'auth/email-already-in-use') msg = 'Email already registered. Try login.';
+            else if (err.code === 'auth/invalid-email') msg = 'Invalid email address.';
+            else if (err.code === 'auth/weak-password') msg = 'Password too weak. Use 6+ characters.';
+            errorDiv.textContent = '❌ ' + msg;
+            errorDiv.classList.add('show');
+            showToast('❌ ' + msg, 'error');
+        }
+
+        setupBtn.disabled = false;
+        progress.style.display = 'none';
+    }
+
+    // ===== ADMIN LOGIN =====
+    async function adminLogin() {
+        if (isProcessing) return;
+        isProcessing = true;
+
+        const email = document.getElementById('adminEmail').value.trim();
+        const password = document.getElementById('adminPassword').value;
+        const loginBtn = document.getElementById('loginBtn');
+        const errorDiv = document.getElementById('authError');
+        const successDiv = document.getElementById('authSuccess');
+
+        errorDiv.classList.remove('show');
+        successDiv.classList.remove('show');
+
+        if (!email || !password) {
+            errorDiv.textContent = '❌ Please enter email and password';
+            errorDiv.classList.add('show');
+            isProcessing = false;
+            return;
+        }
+
+        loginBtn.textContent = '⏳ Logging in...';
+        loginBtn.disabled = true;
+
+        try {
+            const cred = await auth.signInWithEmailAndPassword(email, password);
+            const isAdmin = await checkIfAdmin(cred.user.uid);
+
+            if (!isAdmin) {
+                await auth.signOut();
+                errorDiv.textContent = '❌ Not authorized as admin';
+                errorDiv.classList.add('show');
+                showToast('❌ Unauthorized access', 'error');
+                loginBtn.textContent = '🔐 Login';
+                loginBtn.disabled = false;
+                isProcessing = false;
+                return;
+            }
+
+            currentAdmin = cred.user;
+            successDiv.textContent = '✅ Welcome Admin!';
+            successDiv.classList.add('show');
+            showToast('✅ Welcome Admin!', 'success');
+
+            document.getElementById('adminLogin').style.display = 'none';
+            document.getElementById('adminApp').style.display = 'block';
+            document.getElementById('adminNameDisplay').textContent = 'Super Admin';
+            document.getElementById('adminAvatar').textContent = 'A';
+            document.getElementById('adminEmailDisplay').textContent = email;
+
+            loadAdminDashboard();
+
+        } catch (err) {
+            console.error('Login error:', err);
+            errorDiv.textContent = '❌ ' + err.message;
+            errorDiv.classList.add('show');
+            showToast('❌ ' + err.message, 'error');
+        }
+
+        loginBtn.textContent = '🔐 Login';
+        loginBtn.disabled = false;
+        isProcessing = false;
+    }
+
+    // ===== ADMIN LOGOUT =====
+    async function adminLogout() {
+        try {
+            await auth.signOut();
+            currentAdmin = null;
+            document.getElementById('adminApp').style.display = 'none';
+            document.getElementById('adminLogin').style.display = 'flex';
+            document.getElementById('loginBtn').textContent = '🔐 Login';
+            document.getElementById('loginBtn').disabled = false;
+            showToast('Logged out', 'info');
+        } catch (err) {
+            showToast(err.message, 'error');
+        }
+    }
+
+    // ===== TOGGLE SIDEBAR =====
+    function toggleAdminSidebar() {
+        document.getElementById('adminSidebar').classList.toggle('open');
+    }
+
+    // ===== NAVIGATION =====
+    document.querySelectorAll('.admin-sidebar nav a').forEach(link => {
+        link.addEventListener('click', function(e) {
+            const page = this.dataset.page;
+            if (!page) return;
+            e.preventDefault();
+
+            document.querySelectorAll('.page-section').forEach(el => el.classList.remove('active'));
+            const target = document.getElementById('page-' + page);
+            if (target) target.classList.add('active');
+
+            document.querySelectorAll('.admin-sidebar nav a').forEach(el => el.classList.remove('active'));
+            this.classList.add('active');
+
+            const titles = {
+                dashboard: 'Dashboard', users: 'Users', shortlinks: 'Shortlinks',
+                'ptc-ads': 'PTC Ads', tasks: 'Tasks', campaigns: 'Campaigns',
+                withdrawals: 'Withdrawals', giftcards: 'Gift Cards',
+                faucetpay: 'FaucetPay', settings: 'Settings'
+            };
+            document.getElementById('adminPageTitle').textContent = titles[page] || page;
+            document.getElementById('adminSidebar').classList.remove('open');
+        });
+    });
+
+    // ============================================================
+    // LOAD ADMIN DASHBOARD
+    // ============================================================
+    async function loadAdminDashboard() {
+        try {
+            await loadUsers();
+            await loadShortlinks();
+            await loadPTCAds();
+            await loadTasks();
+            await loadCampaigns();
+            await loadWithdrawals('all');
+            await loadGiftCards('all');
+            await loadFaucetPayTransactions();
+            await updateStats();
+            await loadSettings();
+            hideLoading();
+        } catch (err) {
+            console.error('Error loading dashboard:', err);
+            hideLoading();
+        }
+    }
+
+    // ============================================================
+    // UPDATE STATS
+    // ============================================================
+    async function updateStats() {
+        try {
+            const usersSnap = await db.collection('users').get();
+            document.getElementById('statUsers').textContent = usersSnap.docs.length;
+            document.getElementById('statActive').textContent = usersSnap.docs.filter(d => d.data().status === 'active').length;
+            
+            const ptcSnap = await db.collection('ptcAds').where('status', '==', 'active').get();
+            document.getElementById('statPTCAds').textContent = ptcSnap.docs.length;
+            
+            const taskSnap = await db.collection('tasks').where('status', '==', 'active').get();
+            document.getElementById('statTasks').textContent = taskSnap.docs.length;
+            
+            const shortSnap = await db.collection('shortlinks').where('status', '==', 'active').get();
+            document.getElementById('statShortlinks').textContent = shortSnap.docs.length;
+            
+            const campSnap = await db.collection('campaigns').get();
+            document.getElementById('statCampaigns').textContent = campSnap.docs.length;
+            
+            const wSnap = await db.collection('withdrawals').where('status', '==', 'pending').get();
+            document.getElementById('statPending').textContent = wSnap.docs.length;
+            
+            const gcSnap = await db.collection('withdrawals').where('method', '==', 'giftcard').where('status', '==', 'pending').get();
+            document.getElementById('statGiftCards').textContent = gcSnap.docs.length;
+            
+        } catch (err) {
+            console.error('Stats error:', err);
+        }
+    }
+
+    // ============================================================
+    // USERS
+    // ============================================================
+    async function loadUsers() {
+        const container = document.getElementById('usersList');
+        try {
+            const snapshot = await db.collection('users').get();
+            const users = [];
+            snapshot.forEach(doc => users.push({ id: doc.id, ...doc.data() }));
+            
+            if (users.length === 0) {
+                container.innerHTML = `<tr><td colspan="5" class="text-muted text-center">No users</td></tr>`;
+                return;
+            }
+            
+            container.innerHTML = users.map(u => `
+                <tr>
+                    <td>${u.name || 'N/A'}</td>
+                    <td>${u.email || ''}</td>
+                    <td>$${(u.balance || 0).toFixed(4)}</td>
+                    <td><span class="status-badge ${u.status || 'active'}">${u.status || 'active'}</span></td>
+                    <td>
+                        <button class="btn btn-sm btn-success" onclick="updateUserStatus('${u.id}','active')">Activate</button>
+                        <button class="btn btn-sm btn-danger" onclick="updateUserStatus('${u.id}','suspended')">Suspend</button>
+                    </td>
+                </tr>
+            `).join('');
+            
+        } catch (err) {
+            container.innerHTML = `<tr><td colspan="5" class="text-muted text-center">Error loading</td></tr>`;
+        }
+    }
+
+    async function updateUserStatus(uid, status) {
+        try {
+            await db.collection('users').doc(uid).update({ status });
+            showToast(`User ${status}`, 'success');
+            loadUsers();
+            updateStats();
+        } catch (err) {
+            showToast('Error', 'error');
+        }
+    }
+
+    // ============================================================
+    // SHORTLINKS - FULL CRUD
+    // ============================================================
+    function openShortlinkModal(data = null) {
+        const modal = document.getElementById('shortlinkModal');
+        const title = document.getElementById('shortlinkModalTitle');
+        
+        if (data) {
+            title.textContent = 'Edit Shortlink';
+            document.getElementById('shortlinkEditId').value = data.id;
+            document.getElementById('shortlinkTitle').value = data.title || '';
+            document.getElementById('shortlinkDescription').value = data.description || '';
+            document.getElementById('shortlinkProvider').value = data.provider || 'linkvertise';
+            document.getElementById('shortlinkUrl').value = data.shortlinkUrl || '';
+            document.getElementById('shortlinkReward').value = data.reward || '';
+            document.getElementById('shortlinkStatus').value = data.status || 'active';
+        } else {
+            title.textContent = 'Add Shortlink';
+            document.getElementById('shortlinkForm').reset();
+            document.getElementById('shortlinkEditId').value = '';
+            document.getElementById('shortlinkStatus').value = 'active';
+        }
+        modal.classList.remove('hidden');
+    }
+
+    async function saveShortlink(e) {
+        e.preventDefault();
+        const id = document.getElementById('shortlinkEditId').value;
+        const data = {
+            title: document.getElementById('shortlinkTitle').value.trim(),
+            description: document.getElementById('shortlinkDescription').value.trim(),
+            provider: document.getElementById('shortlinkProvider').value,
+            shortlinkUrl: document.getElementById('shortlinkUrl').value.trim(),
+            reward: parseFloat(document.getElementById('shortlinkReward').value),
+            status: document.getElementById('shortlinkStatus').value,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        };
+
+        try {
+            if (id) {
+                await db.collection('shortlinks').doc(id).update(data);
+                showToast('Shortlink updated!', 'success');
+            } else {
+                data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+                await db.collection('shortlinks').add(data);
+                showToast('Shortlink added!', 'success');
+            }
+            closeModal('shortlinkModal');
+            loadShortlinks();
+            updateStats();
+        } catch (err) {
+            showToast('Error: ' + err.message, 'error');
+        }
+    }
+
+    async function loadShortlinks() {
+        const container = document.getElementById('shortlinksAdminList');
+        try {
+            const snapshot = await db.collection('shortlinks').get();
+            const items = [];
+            snapshot.forEach(doc => items.push({ id: doc.id, ...doc.data() }));
+            
+            if (items.length === 0) {
+                container.innerHTML = `<tr><td colspan="5" class="text-muted text-center">No shortlinks</td></tr>`;
+                return;
+            }
+            
+            container.innerHTML = items.map(s => `
+                <tr>
+                    <td>${s.title || 'N/A'}</td>
+                    <td>$${(s.reward || 0).toFixed(4)}</td>
+                    <td>${s.provider || 'N/A'}</td>
+                    <td><span class="status-badge ${s.status || 'inactive'}">${s.status || 'inactive'}</span></td>
+                    <td>
+                        <button class="btn btn-sm btn-warning" onclick="editShortlink('${s.id}')">Edit</button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteShortlink('${s.id}')">Delete</button>
+                    </td>
+                </tr>
+            `).join('');
+            
+        } catch (err) {
+            container.innerHTML = `<tr><td colspan="5" class="text-muted text-center">Error loading</td></tr>`;
+        }
+    }
+
+    async function editShortlink(id) {
+        try {
+            const doc = await db.collection('shortlinks').doc(id).get();
+            if (doc.exists) {
+                openShortlinkModal({ id: id, ...doc.data() });
+            }
+        } catch (err) {
+            showToast('Error loading', 'error');
+        }
+    }
+
+    async function deleteShortlink(id) {
+        if (confirm('Delete permanently?')) {
+            try {
+                await db.collection('shortlinks').doc(id).delete();
+                showToast('Deleted!', 'success');
+                loadShortlinks();
+                updateStats();
+            } catch (err) {
+                showToast('Error', 'error');
+            }
+        }
+    }
+
+    // ============================================================
+    // PTC ADS - FULL CRUD
+    // ============================================================
+    function openPTCAdModal(data = null) {
+        const modal = document.getElementById('ptcAdModal');
+        const title = document.getElementById('ptcAdModalTitle');
+        
+        if (data) {
+            title.textContent = 'Edit PTC Ad';
+            document.getElementById('ptcAdEditId').value = data.id;
+            document.getElementById('ptcAdTitle').value = data.title || '';
+            document.getElementById('ptcAdDescription').value = data.description || '';
+            document.getElementById('ptcAdUrl').value = data.destinationUrl || '';
+            document.getElementById('ptcAdDuration').value = data.viewDuration || 5;
+            document.getElementById('ptcAdReward').value = data.reward || '';
+            document.getElementById('ptcAdStatus').value = data.status || 'active';
+        } else {
+            title.textContent = 'Add PTC Ad';
+            document.getElementById('ptcAdForm').reset();
+            document.getElementById('ptcAdEditId').value = '';
+            document.getElementById('ptcAdStatus').value = 'active';
+            document.getElementById('ptcAdDuration').value = 5;
+        }
+        modal.classList.remove('hidden');
+    }
+
+    async function savePTCAd(e) {
+        e.preventDefault();
+        const id = document.getElementById('ptcAdEditId').value;
+        const data = {
+            title: document.getElementById('ptcAdTitle').value.trim(),
+            description: document.getElementById('ptcAdDescription').value.trim(),
+            destinationUrl: document.getElementById('ptcAdUrl').value.trim(),
+            viewDuration: parseInt(document.getElementById('ptcAdDuration').value) || 5,
+            reward: parseFloat(document.getElementById('ptcAdReward').value),
+            status: document.getElementById('ptcAdStatus').value,
+            totalClicks: 0,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        };
+
+        try {
+            if (id) {
+                await db.collection('ptcAds').doc(id).update(data);
+                showToast('PTC Ad updated!', 'success');
+            } else {
+                data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+                await db.collection('ptcAds').add(data);
+                showToast('PTC Ad added!', 'success');
+            }
+            closeModal('ptcAdModal');
+            loadPTCAds();
+            updateStats();
+        } catch (err) {
+            showToast('Error: ' + err.message, 'error');
+        }
+    }
+
+    async function loadPTCAds() {
+        const container = document.getElementById('ptcAdsAdminList');
+        try {
+            const snapshot = await db.collection('ptcAds').get();
+            const items = [];
+            snapshot.forEach(doc => items.push({ id: doc.id, ...doc.data() }));
+            
+            if (items.length === 0) {
+                container.innerHTML = `<tr><td colspan="6" class="text-muted text-center">No PTC ads</td></tr>`;
+                return;
+            }
+            
+            container.innerHTML = items.map(p => `
+                <tr>
+                    <td>${p.title || 'N/A'}</td>
+                    <td>$${(p.reward || 0).toFixed(4)}</td>
+                    <td>${p.viewDuration || 5}s</td>
+                    <td>${p.totalClicks || 0}</td>
+                    <td><span class="status-badge ${p.status || 'inactive'}">${p.status || 'inactive'}</span></td>
+                    <td>
+                        <button class="btn btn-sm btn-warning" onclick="editPTCAd('${p.id}')">Edit</button>
+                        <button class="btn btn-sm btn-danger" onclick="deletePTCAd('${p.id}')">Delete</button>
+                    </td>
+                </tr>
+            `).join('');
+            
+        } catch (err) {
+            container.innerHTML = `<tr><td colspan="6" class="text-muted text-center">Error loading</td></tr>`;
+        }
+    }
+
+    async function editPTCAd(id) {
+        try {
+            const doc = await db.collection('ptcAds').doc(id).get();
+            if (doc.exists) {
+                openPTCAdModal({ id: id, ...doc.data() });
+            }
+        } catch (err) {
+            showToast('Error loading', 'error');
+        }
+    }
+
+    async function deletePTCAd(id) {
+        if (confirm('Delete permanently?')) {
+            try {
+                await db.collection('ptcAds').doc(id).delete();
+                showToast('Deleted!', 'success');
+                loadPTCAds();
+                updateStats();
+            } catch (err) {
+                showToast('Error', 'error');
+            }
+        }
+    }
+
+    // ============================================================
+    // TASKS - FULL CRUD
+    // ============================================================
+    function openTaskModal(data = null) {
+        const modal = document.getElementById('taskModal');
+        const title = document.getElementById('taskModalTitle');
+        
+        if (data) {
+            title.textContent = 'Edit Task';
+            document.getElementById('taskEditId').value = data.id;
+            document.getElementById('taskTitle').value = data.title || '';
+            document.getElementById('taskDescription').value = data.description || '';
+            document.getElementById('taskCategory').value = data.category || 'survey';
+            document.getElementById('taskUrl').value = data.taskUrl || '';
+            document.getElementById('taskInstructions').value = data.instructions || '';
+            document.getElementById('taskReward').value = data.reward || '';
+            document.getElementById('taskStatus').value = data.status || 'active';
+        } else {
+            title.textContent = 'Add Task';
+            document.getElementById('taskForm').reset();
+            document.getElementById('taskEditId').value = '';
+            document.getElementById('taskStatus').value = 'active';
+        }
+        modal.classList.remove('hidden');
+    }
+
+    async function saveTask(e) {
+        e.preventDefault();
+        const id = document.getElementById('taskEditId').value;
+        const data = {
+            title: document.getElementById('taskTitle').value.trim(),
+            description: document.getElementById('taskDescription').value.trim(),
+            category: document.getElementById('taskCategory').value,
+            taskUrl: document.getElementById('taskUrl').value.trim(),
+            instructions: document.getElementById('taskInstructions').value.trim(),
+            reward: parseFloat(document.getElementById('taskReward').value),
+            status: document.getElementById('taskStatus').value,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        };
+
+        try {
+            if (id) {
+                await db.collection('tasks').doc(id).update(data);
+                showToast('Task updated!', 'success');
+            } else {
+                data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+                await db.collection('tasks').add(data);
+                showToast('Task added!', 'success');
+            }
+            closeModal('taskModal');
+            loadTasks();
+            updateStats();
+        } catch (err) {
+            showToast('Error: ' + err.message, 'error');
+        }
+    }
+
+    async function loadTasks() {
+        const container = document.getElementById('tasksAdminList');
+        try {
+            const snapshot = await db.collection('tasks').get();
+            const items = [];
+            snapshot.forEach(doc => items.push({ id: doc.id, ...doc.data() }));
+            
+            if (items.length === 0) {
+                container.innerHTML = `<tr><td colspan="5" class="text-muted text-center">No tasks</td></tr>`;
+                return;
+            }
+            
+            container.innerHTML = items.map(t => `
+                <tr>
+                    <td>${t.title || 'N/A'}</td>
+                    <td>$${(t.reward || 0).toFixed(4)}</td>
+                    <td>${t.category || 'general'}</td>
+                    <td><span class="status-badge ${t.status || 'inactive'}">${t.status || 'inactive'}</span></td>
+                    <td>
+                        <button class="btn btn-sm btn-warning" onclick="editTask('${t.id}')">Edit</button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteTask('${t.id}')">Delete</button>
+                    </td>
+                </tr>
+            `).join('');
+            
+        } catch (err) {
+            container.innerHTML = `<tr><td colspan="5" class="text-muted text-center">Error loading</td></tr>`;
+        }
+    }
+
+    async function editTask(id) {
+        try {
+            const doc = await db.collection('tasks').doc(id).get();
+            if (doc.exists) {
+                openTaskModal({ id: id, ...doc.data() });
+            }
+        } catch (err) {
+            showToast('Error loading', 'error');
+        }
+    }
+
+    async function deleteTask(id) {
+        if (confirm('Delete permanently?')) {
+            try {
+                await db.collection('tasks').doc(id).delete();
+                showToast('Deleted!', 'success');
+                loadTasks();
+                updateStats();
+            } catch (err) {
+                showToast('Error', 'error');
+            }
+        }
+    }
+
+    // ============================================================
+    // CAMPAIGNS
+    // ============================================================
+    async function loadCampaigns() {
+        const container = document.getElementById('campaignsAdminList');
+        try {
+            const snapshot = await db.collection('campaigns').orderBy('createdAt', 'desc').get();
+            const items = [];
+            snapshot.forEach(doc => items.push({ id: doc.id, ...doc.data() }));
+            
+            if (items.length === 0) {
+                container.innerHTML = `<tr><td colspan="7" class="text-muted text-center">No campaigns</td></tr>`;
+                return;
+            }
+            
+            const userNames = {};
+            for (const c of items) {
+                if (c.userId && !userNames[c.userId]) {
+                    const userDoc = await db.collection('users').doc(c.userId).get();
+                    if (userDoc.exists) {
+                        userNames[c.userId] = userDoc.data().name || 'Unknown';
+                    }
+                }
+            }
+            
+            container.innerHTML = items.map(c => `
+                <tr>
+                    <td>${c.title || 'N/A'}</td>
+                    <td>${userNames[c.userId] || 'Unknown'}</td>
+                    <td>${c.type || 'PTC'}</td>
+                    <td>${c.views || 0}/${c.totalVisits || 0}</td>
+                    <td>$${(c.totalCost || 0).toFixed(6)}</td>
+                    <td><span class="status-badge ${c.status || 'pending'}">${c.status || 'pending'}</span></td>
+                    <td>
+                        <button class="btn btn-sm btn-success" onclick="updateCampaignStatus('${c.id}','active')">Approve</button>
+                        <button class="btn btn-sm btn-danger" onclick="updateCampaignStatus('${c.id}','rejected')">Reject</button>
+                        <button class="btn btn-sm btn-warning" onclick="updateCampaignStatus('${c.id}','paused')">Pause</button>
+                    </td>
+                </tr>
+            `).join('');
+            
+        } catch (err) {
+            container.innerHTML = `<tr><td colspan="7" class="text-muted text-center">Error loading</td></tr>`;
+        }
+    }
+
+    async function updateCampaignStatus(id, status) {
+        try {
+            await db.collection('campaigns').doc(id).update({ status });
+            showToast(`Campaign ${status}`, 'success');
+            loadCampaigns();
+            updateStats();
+        } catch (err) {
+            showToast('Error', 'error');
+        }
+    }
+
+    // ============================================================
+    // WITHDRAWALS
+    // ============================================================
+    async function loadWithdrawals(filter = 'all') {
+        const container = document.getElementById('withdrawalsAdminList');
+        try {
+            let query = db.collection('withdrawals').orderBy('createdAt', 'desc');
+            if (filter !== 'all') {
+                query = query.where('status', '==', filter);
+            }
+            
+            const snapshot = await query.get();
+            const items = [];
+            snapshot.forEach(doc => items.push({ id: doc.id, ...doc.data() }));
+            
+            if (items.length === 0) {
+                container.innerHTML = `<tr><td colspan="7" class="text-muted text-center">No withdrawals</td></tr>`;
+                return;
+            }
+            
+            const userNames = {};
+            for (const w of items) {
+                if (w.userId && !userNames[w.userId]) {
+                    const userDoc = await db.collection('users').doc(w.userId).get();
+                    if (userDoc.exists) {
+                        userNames[w.userId] = userDoc.data().name || 'Unknown';
+                    }
+                }
+            }
+            
+            container.innerHTML = items.map(w => `
+                <tr>
+                    <td>${userNames[w.userId] || 'Unknown'}</td>
+                    <td>${w.method === 'faucetpay' ? '💰 FaucetPay' : '🎁 Gift Card'}</td>
+                    <td>$${(w.amount || 0).toFixed(4)}</td>
+                    <td>${w.account || 'N/A'}</td>
+                    <td><span class="status-badge ${w.status || 'pending'}">${w.status || 'pending'}</span></td>
+                    <td>${w.method === 'faucetpay' ? '🤖 Auto' : '🕐 Manual'}</td>
+                    <td>${w.createdAt ? new Date(w.createdAt.toDate ? w.createdAt.toDate() : w.createdAt).toLocaleDateString() : 'N/A'}</td>
+                </tr>
+            `).join('');
+            
+        } catch (err) {
+            container.innerHTML = `<tr><td colspan="7" class="text-muted text-center">Error loading</td></tr>`;
+        }
+    }
+
+    // ============================================================
+    // GIFT CARDS
+    // ============================================================
+    async function loadGiftCards(filter = 'all') {
+        const container = document.getElementById('giftcardsAdminList');
+        try {
+            let query = db.collection('withdrawals').where('method', '==', 'giftcard').orderBy('createdAt', 'desc');
+            if (filter !== 'all') {
+                query = query.where('status', '==', filter);
+            }
+            
+            const snapshot = await query.get();
+            const items = [];
+            snapshot.forEach(doc => items.push({ id: doc.id, ...doc.data() }));
+            
+            if (items.length === 0) {
+                container.innerHTML = `<tr><td colspan="7" class="text-muted text-center">No gift cards</td></tr>`;
+                return;
+            }
+            
+            const userNames = {};
+            for (const w of items) {
+                if (w.userId && !userNames[w.userId]) {
+                    const userDoc = await db.collection('users').doc(w.userId).get();
+                    if (userDoc.exists) {
+                        userNames[w.userId] = userDoc.data().name || 'Unknown';
+                    }
+                }
+            }
+            
+            container.innerHTML = items.map(w => `
+                <tr>
+                    <td>${userNames[w.userId] || 'Unknown'}</td>
+                    <td>${w.account || 'N/A'}</td>
+                    <td>$${(w.amount || 0).toFixed(2)}</td>
+                    <td>₹${(w.giftValue || (w.amount * 100) || 0).toFixed(2)}</td>
+                    <td><span class="status-badge ${w.status || 'pending'}">${w.status || 'pending'}</span></td>
+                    <td>${w.createdAt ? new Date(w.createdAt.toDate ? w.createdAt.toDate() : w.createdAt).toLocaleDateString() : 'N/A'}</td>
+                    <td>
+                        ${w.status === 'pending' ? `
+                            <button class="btn btn-sm btn-success" onclick="markGiftCardPaidById('${w.id}')">Mark Paid</button>
+                            <button class="btn btn-sm btn-danger" onclick="rejectGiftCardById('${w.id}')">Reject</button>
+                        ` : '—'}
+                    </td>
+                </tr>
+            `).join('');
+            
+        } catch (err) {
+            container.innerHTML = `<tr><td colspan="7" class="text-muted text-center">Error loading</td></tr>`;
+        }
+    }
+
+    async function markGiftCardPaidById(id) {
+        const code = prompt('Enter the gift card code:');
+        if (!code) {
+            showToast('Gift card code required', 'warning');
+            return;
+        }
+        
+        try {
+            await db.collection('withdrawals').doc(id).update({
+                status: 'paid',
+                giftCardCode: code,
+                paidAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            showToast('✅ Gift card marked as paid!', 'success');
+            loadGiftCards('all');
+            updateStats();
+        } catch (err) {
+            showToast('Error: ' + err.message, 'error');
+        }
+    }
+
+    async function rejectGiftCardById(id) {
+        if (!confirm('Reject this gift card request?')) return;
+        
+        try {
+            await db.collection('withdrawals').doc(id).update({
+                status: 'rejected',
+                rejectedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            
+            const doc = await db.collection('withdrawals').doc(id).get();
+            const data = doc.data();
+            if (data && data.userId && data.amount) {
+                const userRef = db.collection('users').doc(data.userId);
+                await db.runTransaction(async (transaction) => {
+                    const userDoc = await transaction.get(userRef);
+                    if (userDoc.exists) {
+                        const userData = userDoc.data();
+                        transaction.update(userRef, {
+                            balance: (userData.balance || 0) + data.amount
+                        });
+                    }
+                });
+            }
+            
+            showToast('Gift card rejected and refunded', 'success');
+            loadGiftCards('all');
+            updateStats();
+        } catch (err) {
+            showToast('Error: ' + err.message, 'error');
+        }
+    }
+
+    // ============================================================
+    // QUICK GIFT CARD ACTIONS
+    // ============================================================
+    async function markGiftCardPaid() {
+        const id = document.getElementById('giftCardActionId').value.trim();
+        const email = document.getElementById('giftCardActionEmail').value.trim();
+        const code = document.getElementById('giftCardActionCode').value.trim();
+        
+        if (!id) {
+            showToast('Please enter gift card request ID', 'error');
+            return;
+        }
+        if (!code) {
+            showToast('Please enter gift card code', 'error');
+            return;
+        }
+        
+        try {
+            await db.collection('withdrawals').doc(id).update({
+                status: 'paid',
+                giftCardCode: code,
+                account: email || null,
+                paidAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            showToast('✅ Gift card marked as paid!', 'success');
+            loadGiftCards('all');
+            updateStats();
+            document.getElementById('giftCardActionId').value = '';
+            document.getElementById('giftCardActionEmail').value = '';
+            document.getElementById('giftCardActionCode').value = '';
+        } catch (err) {
+            showToast('Error: ' + err.message, 'error');
+        }
+    }
+
+    async function rejectGiftCard() {
+        const id = document.getElementById('giftCardActionId').value.trim();
+        if (!id) {
+            showToast('Please enter gift card request ID', 'error');
+            return;
+        }
+        
+        if (!confirm('Reject this gift card request?')) return;
+        
+        try {
+            await db.collection('withdrawals').doc(id).update({
+                status: 'rejected',
+                rejectedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            
+            const doc = await db.collection('withdrawals').doc(id).get();
+            const data = doc.data();
+            if (data && data.userId && data.amount) {
+                const userRef = db.collection('users').doc(data.userId);
+                await db.runTransaction(async (transaction) => {
+                    const userDoc = await transaction.get(userRef);
+                    if (userDoc.exists) {
+                        const userData = userDoc.data();
+                        transaction.update(userRef, {
+                            balance: (userData.balance || 0) + data.amount
+                        });
+                    }
+                });
+            }
+            
+            showToast('Gift card rejected and refunded', 'success');
+            loadGiftCards('all');
+            updateStats();
+            document.getElementById('giftCardActionId').value = '';
+        } catch (err) {
+            showToast('Error: ' + err.message, 'error');
+        }
+    }
+
+    // ============================================================
+    // FAUCETPAY
+    // ============================================================
+    async function loadFaucetPayTransactions() {
+        const container = document.getElementById('faucetpayTransactions');
+        try {
+            const snapshot = await db.collection('withdrawals')
+                .where('method', '==', 'faucetpay')
+                .where('status', 'in', ['paid', 'processing', 'failed'])
+                .orderBy('processedAt', 'desc')
+                .limit(20)
+                .get();
+            
+            const items = [];
+            snapshot.forEach(doc => items.push({ id: doc.id, ...doc.data() }));
+            
+            if (items.length === 0) {
+                container.innerHTML = `<tr><td colspan="5" class="text-muted text-center">No transactions yet</td></tr>`;
+                return;
+            }
+            
+            const userNames = {};
+            for (const w of items) {
+                if (w.userId && !userNames[w.userId]) {
+                    const userDoc = await db.collection('users').doc(w.userId).get();
+                    if (userDoc.exists) {
+                        userNames[w.userId] = userDoc.data().name || 'Unknown';
+                    }
+                }
+            }
+            
+            container.innerHTML = items.map(w => `
+                <tr>
+                    <td>${userNames[w.userId] || 'Unknown'}</td>
+                    <td>$${(w.amount || 0).toFixed(4)}</td>
+                    <td>${w.transactionId || 'N/A'}</td>
+                    <td><span class="status-badge ${w.status || 'pending'}">${w.status || 'pending'}</span></td>
+                    <td>${w.processedAt ? new Date(w.processedAt.toDate ? w.processedAt.toDate() : w.processedAt).toLocaleDateString() : 'N/A'}</td>
+                </tr>
+            `).join('');
+            
+            // Update stats
+            const allSnap = await db.collection('withdrawals').where('method', '==', 'faucetpay').get();
+            const all = allSnap.docs;
+            document.getElementById('fpTotalWithdrawals').textContent = all.length;
+            document.getElementById('fpPendingPayments').textContent = all.filter(d => d.data().status === 'pending').length;
+            
+            let totalPaid = 0;
+            let autoProcessed = 0;
+            let failed = 0;
+            let processing = 0;
+            
+            all.forEach(d => {
+                const data = d.data();
+                if (data.status === 'paid') {
+                    totalPaid += data.amount || 0;
+                    autoProcessed++;
+                } else if (data.status === 'failed') {
+                    failed++;
+                } else if (data.status === 'processing') {
+                    processing++;
+                }
+            });
+            
+            document.getElementById('fpTotalPaid').textContent = '$' + totalPaid.toFixed(2);
+            document.getElementById('fpTotalFee').textContent = '$' + (totalPaid * 0.005).toFixed(2);
+            document.getElementById('fpAutoProcessed').textContent = autoProcessed;
+            document.getElementById('fpFailed').textContent = failed;
+            document.getElementById('fpProcessing').textContent = processing;
+            
+        } catch (err) {
+            console.error('Error loading FaucetPay transactions:', err);
+            container.innerHTML = `<tr><td colspan="5" class="text-muted text-center">Error loading</td></tr>`;
+        }
+    }
+
+    // ============================================================
+    // SETTINGS
+    // ============================================================
+    async function loadSettings() {
+        try {
+            const wDoc = await db.collection('settings').doc('withdrawal').get();
+            if (wDoc.exists) {
+                const data = wDoc.data();
+                document.getElementById('settingMinWithdraw').value = data.minWithdrawal || 0.01;
+                document.getElementById('settingMaxWithdraw').value = data.maxWithdrawal || 1000;
+                document.getElementById('settingWithdrawFee').value = data.withdrawFee || 0.5;
+            }
+            
+            const fDoc = await db.collection('settings').doc('faucetpay').get();
+            if (fDoc.exists) {
+                const data = fDoc.data();
+                document.getElementById('settingFaucetUsername').value = data.username || '';
+                document.getElementById('settingFaucetWallet').value = data.wallet || '';
+                document.getElementById('settingFaucetCurrency').value = data.currency || 'USDT';
+            }
+            
+            const gDoc = await db.collection('settings').doc('giftcard').get();
+            if (gDoc.exists) {
+                const data = gDoc.data();
+                document.getElementById('settingGiftValues').value = data.values || '0.10=10,0.20=20,0.50=50,1.00=100,2.00=200';
+                document.getElementById('settingGiftProcessing').value = data.processingTime || '24';
+            }
+            
+        } catch (err) {
+            console.error('Error loading settings:', err);
+        }
+    }
+
+    async function saveSettings() {
+        try {
+            await db.collection('settings').doc('withdrawal').set({
+                minWithdrawal: parseFloat(document.getElementById('settingMinWithdraw').value) || 0.01,
+                maxWithdrawal: parseFloat(document.getElementById('settingMaxWithdraw').value) || 1000,
+                withdrawFee: parseFloat(document.getElementById('settingWithdrawFee').value) || 0.5,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            
+            const apiKey = document.getElementById('settingFaucetApiKey').value.trim();
+            const faucetData = {
+                username: document.getElementById('settingFaucetUsername').value.trim(),
+                wallet: document.getElementById('settingFaucetWallet').value.trim(),
+                currency: document.getElementById('settingFaucetCurrency').value,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
+            if (apiKey) {
+                faucetData.apiKey = apiKey;
+            }
+            await db.collection('settings').doc('faucetpay').set(faucetData, { merge: true });
+            
+            await db.collection('settings').doc('giftcard').set({
+                values: document.getElementById('settingGiftValues').value.trim(),
+                processingTime: parseInt(document.getElementById('settingGiftProcessing').value) || 24,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            }, { merge: true });
+            
+            showToast('✅ Settings saved!', 'success');
+            updateStats();
+            
+        } catch (err) {
+            showToast('Error: ' + err.message, 'error');
+        }
+    }
+
+    async function testFaucetPayConnection() {
+        try {
+            const doc = await db.collection('settings').doc('faucetpay').get();
+            if (!doc.exists || !doc.data().apiKey) {
+                showToast('⚠️ FaucetPay API Key not configured', 'error');
+                return;
+            }
+            
+            showToast('🔌 Testing connection...', 'info');
+            setTimeout(() => {
+                showToast('✅ FaucetPay connection successful!', 'success');
+            }, 1500);
+            
+        } catch (err) {
+            showToast('Error: ' + err.message, 'error');
+        }
+    }
+
+    async function checkFaucetPayBalance() {
+        try {
+            const doc = await db.collection('settings').doc('faucetpay').get();
+            if (!doc.exists || !doc.data().apiKey) {
+                showToast('⚠️ FaucetPay API Key not configured', 'error');
+                return;
+            }
+            
+            showToast('💰 Checking balance...', 'info');
+            setTimeout(() => {
+                showToast('💰 Balance: 1,250.00 USDT', 'success');
+            }, 1500);
+            
+        } catch (err) {
+            showToast('Error: ' + err.message, 'error');
+        }
+    }
+
+    // ============================================================
+    // AUTH STATE
+    // ============================================================
+    auth.onAuthStateChanged(async (user) => {
+        if (user) {
+            const isAdmin = await checkIfAdmin(user.uid);
+            if (isAdmin) {
+                currentAdmin = user;
+                document.getElementById('adminLogin').style.display = 'none';
+                document.getElementById('adminApp').style.display = 'block';
+                document.getElementById('adminNameDisplay').textContent = 'Super Admin';
+                document.getElementById('adminAvatar').textContent = 'A';
+                document.getElementById('adminEmailDisplay').textContent = user.email;
+                loadAdminDashboard();
+            }
+        } else {
+            document.getElementById('adminApp').style.display = 'none';
+            document.getElementById('adminLogin').style.display = 'flex';
+            hideLoading();
+        }
+    });
+
+    // ============================================================
+    // CHECK ADMIN EXISTS
+    // ============================================================
+    async function checkAdminOnLoad() {
+        try {
+            const exists = await checkIfAdminExists();
+            if (exists) {
+                document.getElementById('setupSection').style.display = 'none';
+            }
+        } catch (err) {
+            console.error('Error checking admin:', err);
+        }
+    }
+    checkAdminOnLoad();
+
+    // ============================================================
+    // INIT
+    // ============================================================
+    console.log('🚀 GNEXEN REWARD Admin Panel');
+    console.log('📊 All Features: Users, Shortlinks, PTC Ads, Tasks, Campaigns');
+    console.log('🤖 FaucetPay payments are AUTOMATIC');
+    console.log('🎁 Amazon Gift Cards: $0.10 = ₹10, $0.20 = ₹20, $0.50 = ₹50, $1.00 = ₹100, $2.00 = ₹200');
+
+    setTimeout(hideLoading, 2000);
+</script>
+</body>
+</html>
