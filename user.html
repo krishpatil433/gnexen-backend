@@ -770,46 +770,12 @@
 </div>
 
 <script>
-    
-    /// ============================================================
-// SUPABASE CONFIRMATION HANDLER
-// ============================================================
-// Check if user is coming from email confirmation
-const urlParams = new URLSearchParams(window.location.search);
-const accessToken = urlParams.get('access_token');
-const refreshToken = urlParams.get('refresh_token');
-
-if (accessToken && refreshToken) {
-    console.log('🔑 Email confirmed! Setting session...');
-    
-    // Set the session in Supabase
-    const { data, error } = await supabase.auth.setSession({
-        access_token: accessToken,
-        refresh_token: refreshToken
-    });
-    
-    if (error) {
-        console.error('Session error:', error);
-        showToast('Error confirming email. Please try again.', 'error');
-    } else {
-        console.log('✅ Email confirmed successfully!');
-        showToast('✅ Email confirmed! Welcome to GNEXEN REWARD!', 'success');
-        
-        // Reload user data
-        await loadUserData();
-        await showDashboard();
-        
-        // Remove tokens from URL
-        window.history.replaceState({}, document.title, '/user.html');
-    }
-}/ ============================================================
-    // 🔑 SUPABASE CREDENTIALS (UPDATED)
+    // ============================================================
+    // CONFIGURATION
     // ============================================================
     const SUPABASE_URL = 'https://ogkavpsfbihxbodvzppj.supabase.co';
     const SUPABASE_ANON_KEY = 'sb_publishable_W4JV0K8shyAgOE0BUG6WPw_teElLVsE';
-    
-    // 🌐 ZEABUR BACKEND URL (Replace with your Zeabur URL)
-    const API_URL = 'http://localhost:3000'; // Change to your Zeabur URL
+    const API_URL = 'https://gnexen-backend-new.onrender.com';
     
     // ============================================================
     // STATE VARIABLES
@@ -894,7 +860,7 @@ if (accessToken && refreshToken) {
     }
 
     // ============================================================
-    // API FUNCTIONS (Supabase + Zeabur)
+    // API FUNCTIONS
     // ============================================================
     async function registerUser(name, email, password, referral) {
         const response = await fetch(`${API_URL}/api/register`, {
@@ -954,15 +920,6 @@ if (accessToken && refreshToken) {
 
     async function getTasks() {
         const response = await fetch(`${API_URL}/api/tasks`);
-        return response.json();
-    }
-
-    async function completeTaskRequest(userId, taskId, reward) {
-        const response = await fetch(`${API_URL}/api/complete-task`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId, taskId, reward })
-        });
         return response.json();
     }
 
@@ -1139,8 +1096,13 @@ if (accessToken && refreshToken) {
         if (!currentUser) {
             const stored = localStorage.getItem('gnx_user');
             if (stored) {
-                userData = JSON.parse(stored);
-                currentUser = { uid: userData.uid, name: userData.name, email: userData.email };
+                try {
+                    userData = JSON.parse(stored);
+                    currentUser = { uid: userData.uid, name: userData.name, email: userData.email };
+                    console.log('✅ Restored user from localStorage');
+                } catch (err) {
+                    console.error('Parse error:', err);
+                }
             } else {
                 return;
             }
@@ -1156,9 +1118,10 @@ if (accessToken && refreshToken) {
                 if (response.success) {
                     userData = response.user;
                     localStorage.setItem('gnx_user', JSON.stringify(userData));
+                    console.log('✅ User data refreshed');
                 }
             } catch (err) {
-                console.log('Using cached user data');
+                console.log('⚠️ Using cached user data');
             }
         }
 
@@ -1187,7 +1150,7 @@ if (accessToken && refreshToken) {
     }
 
     // ============================================================
-    // LOAD SHORTLINKS
+    // LOAD SHORTLINKS - FIXED
     // ============================================================
     async function loadShortlinks() {
         const container = document.getElementById('shortlinksList');
@@ -1216,21 +1179,49 @@ if (accessToken && refreshToken) {
         }
     }
 
+    // ============================================================
+    // COMPLETE SHORTLINK - FIXED
+    // ============================================================
     async function completeShortlink(id, reward) {
+        if (!currentUser || !currentUser.uid) {
+            showToast('Please login first', 'error');
+            return;
+        }
+
         showToast('Opening shortlink...', 'info');
         setTimeout(async () => {
-            const response = await completeTaskRequest(currentUser.uid, id, reward);
-            if (response.success) {
-                await refreshUserData();
-                showToast(`✅ Earned $${reward.toFixed(4)}!`, 'success');
-            } else {
-                showToast('❌ ' + response.error, 'error');
+            try {
+                const response = await fetch(`${API_URL}/api/complete-task`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        userId: currentUser.uid,
+                        taskId: id,
+                        reward: reward
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    await refreshUserData();
+                    showToast(`✅ Earned $${reward.toFixed(4)}!`, 'success');
+                    loadHistory();
+                } else {
+                    showToast('❌ ' + data.error, 'error');
+                    console.error('API Error:', data);
+                }
+            } catch (error) {
+                console.error('Shortlink completion error:', error);
+                showToast('❌ Error: ' + error.message, 'error');
             }
         }, 3000);
     }
 
     // ============================================================
-    // LOAD PTC ADS
+    // LOAD PTC ADS - FIXED
     // ============================================================
     async function loadPTCAds() {
         const container = document.getElementById('ptcList');
@@ -1259,26 +1250,54 @@ if (accessToken && refreshToken) {
         }
     }
 
+    // ============================================================
+    // VIEW PTC - FIXED
+    // ============================================================
     async function viewPTC(id, reward, duration) {
+        if (!currentUser || !currentUser.uid) {
+            showToast('Please login first', 'error');
+            return;
+        }
+
         showToast(`View ad for ${duration} seconds...`, 'info');
         let seconds = duration;
         const interval = setInterval(async () => {
             seconds--;
             if (seconds <= 0) {
                 clearInterval(interval);
-                const response = await completeTaskRequest(currentUser.uid, id, reward);
-                if (response.success) {
-                    await refreshUserData();
-                    showToast(`✅ Earned $${reward.toFixed(4)}!`, 'success');
-                } else {
-                    showToast('❌ ' + response.error, 'error');
+                try {
+                    const response = await fetch(`${API_URL}/api/complete-task`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            userId: currentUser.uid,
+                            taskId: id,
+                            reward: reward
+                        })
+                    });
+
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        await refreshUserData();
+                        showToast(`✅ Earned $${reward.toFixed(4)}!`, 'success');
+                        loadHistory();
+                    } else {
+                        showToast('❌ ' + data.error, 'error');
+                        console.error('API Error:', data);
+                    }
+                } catch (error) {
+                    console.error('PTC completion error:', error);
+                    showToast('❌ Error: ' + error.message, 'error');
                 }
             }
         }, 1000);
     }
 
     // ============================================================
-    // LOAD TASKS
+    // LOAD TASKS - FIXED
     // ============================================================
     async function loadTasks() {
         const container = document.getElementById('tasksList');
@@ -1307,15 +1326,43 @@ if (accessToken && refreshToken) {
         }
     }
 
+    // ============================================================
+    // COMPLETE TASK - FIXED
+    // ============================================================
     async function completeTask(id, reward) {
+        if (!currentUser || !currentUser.uid) {
+            showToast('Please login first', 'error');
+            return;
+        }
+
         showToast('Opening task...', 'info');
         setTimeout(async () => {
-            const response = await completeTaskRequest(currentUser.uid, id, reward);
-            if (response.success) {
-                await refreshUserData();
-                showToast(`✅ Earned $${reward.toFixed(4)}!`, 'success');
-            } else {
-                showToast('❌ ' + response.error, 'error');
+            try {
+                const response = await fetch(`${API_URL}/api/complete-task`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        userId: currentUser.uid,
+                        taskId: id,
+                        reward: reward
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    await refreshUserData();
+                    showToast(`✅ Earned $${reward.toFixed(4)}!`, 'success');
+                    loadHistory();
+                } else {
+                    showToast('❌ ' + data.error, 'error');
+                    console.error('API Error:', data);
+                }
+            } catch (error) {
+                console.error('Task completion error:', error);
+                showToast('❌ Error: ' + error.message, 'error');
             }
         }, 3000);
     }
@@ -1605,8 +1652,7 @@ if (accessToken && refreshToken) {
     // INIT
     // ============================================================
     console.log('🚀 GNEXEN REWARD - Zeabur + Supabase Version');
-    console.log('🔑 SUPABASE_URL:', SUPABASE_URL);
-    console.log('🔑 SUPABASE_ANON_KEY:', SUPABASE_ANON_KEY.substring(0, 20) + '...');
+    console.log('🔑 API_URL:', API_URL);
     console.log('⚡ FaucetPay withdrawals are AUTOMATIC');
     console.log('🎁 Amazon Gift Cards: $0.10 = ₹10, $0.20 = ₹20, $0.50 = ₹50, $1.00 = ₹100, $2.00 = ₹200');
 
