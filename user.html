@@ -770,7 +770,39 @@
 </div>
 
 <script>
-    // ============================================================
+    
+    /// ============================================================
+// SUPABASE CONFIRMATION HANDLER
+// ============================================================
+// Check if user is coming from email confirmation
+const urlParams = new URLSearchParams(window.location.search);
+const accessToken = urlParams.get('access_token');
+const refreshToken = urlParams.get('refresh_token');
+
+if (accessToken && refreshToken) {
+    console.log('🔑 Email confirmed! Setting session...');
+    
+    // Set the session in Supabase
+    const { data, error } = await supabase.auth.setSession({
+        access_token: accessToken,
+        refresh_token: refreshToken
+    });
+    
+    if (error) {
+        console.error('Session error:', error);
+        showToast('Error confirming email. Please try again.', 'error');
+    } else {
+        console.log('✅ Email confirmed successfully!');
+        showToast('✅ Email confirmed! Welcome to GNEXEN REWARD!', 'success');
+        
+        // Reload user data
+        await loadUserData();
+        await showDashboard();
+        
+        // Remove tokens from URL
+        window.history.replaceState({}, document.title, '/user.html');
+    }
+}/ ============================================================
     // 🔑 SUPABASE CREDENTIALS (UPDATED)
     // ============================================================
     const SUPABASE_URL = 'https://ogkavpsfbihxbodvzppj.supabase.co';
